@@ -1,3 +1,9 @@
+[org/gnome/settings-daemon/plugins/xsettings]
+overrides={'Gtk/DecorationLayout': <''>}
+
+[org/gnome/desktop/wm/preferences]
+button-layout=''
+
 [org/gnome/desktop/interface]
 icon-theme='Papirus'
 font-name='Adwaita Sans 11'
