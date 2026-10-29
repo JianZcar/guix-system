@@ -1,0 +1,20 @@
+#!/bin/bash
+set -u
+
+dir=$(mktemp -d /tmp/mangowm-XXXXXX) || exit 1
+trap 'rm -rf "$dir"' EXIT
+
+cat > "$dir/xterm" <<'EOF'
+#!/bin/sh
+exec foot "$@"
+EOF
+
+chmod 700 "$dir"
+chmod 700 "$dir/xterm"
+
+export PATH="$PATH:$dir"
+export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-}:/etc/xdg"
+
+dbus-run-session -- mango -s "dex -a" -c /etc/xdg/mango/config.conf
+status=$?
+exit "$status"

@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Noctalia Session
+Exec=noctalia
+Terminal=false

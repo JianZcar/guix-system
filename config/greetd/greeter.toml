@@ -1,0 +1,11 @@
+[output]
+width = 1920
+height = 1080
+refresh_rate = 60
+scale = 1.0
+
+[clock]
+enabled = true
+position = "above-panel"
+time_format = "{:%I:%M %p}"
+date_format = "%x"

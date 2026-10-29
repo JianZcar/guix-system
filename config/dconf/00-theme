@@ -1,0 +1,10 @@
+[org/gnome/desktop/interface]
+icon-theme='Papirus'
+font-name='Adwaita Sans 11'
+document-font-name='Adwaita Sans 11'
+monospace-font-name='JetBrainsMono Nerd Font 11'
+cursor-theme='Adwaita'
+cursor-size=24
+
+[org/gnome/desktop/sound]
+theme-name='Yaru'

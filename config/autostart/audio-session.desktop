@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Audio Session
+Exec=sh -c 'pipewire & wireplumber & pipewire-pulse & sleep 1 && pw-play /run/current-system/profile/share/sounds/Yaru/stereo/desktop-login.oga'
+Terminal=false
