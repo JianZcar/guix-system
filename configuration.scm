@@ -34,9 +34,6 @@
                                  #:kernel-mode-setting? #t
                                  #:dynamic-boost? #t))
 
-(define audio-session
-  (local-file "./config/autostart/audio-session.desktop"))
-
 (define asound-conf
   (mixed-text-file "asound.conf"
                    "pcm_type.pipewire {\n"
@@ -92,6 +89,13 @@
 
 (define noctalia-session
   (local-file "./config/autostart/noctalia-session.desktop"))
+
+
+(define login-sound
+  (local-file "./config/autostart/login-sound.desktop"))
+
+(define foot-server-session
+  (local-file "./config/autostart/foot-server-session.desktop"))
 
 (define dconf-profile
   (local-file "./config/dconf/user"))
@@ -149,7 +153,6 @@
     "xdg-desktop-portal-gtk"
     "glib:bin"
     "gvfs"
-    "mangowm"
     "noctalia-shell"
     "playerctl"
     "fontconfig"
@@ -171,7 +174,6 @@
     "foot"
     "xfconf"
     "icecat"
-    "nwg-look"
     "gnome-software"))
 
 (define services-list
@@ -209,8 +211,6 @@
                 (service rtkit-service-type)
                 (simple-service 'asound-conf etc-service-type
                                 (list `("asound.conf" ,asound-conf)))
-                (simple-service 'audio-session etc-service-type
-                                (list `("xdg/autostart/audio-session.desktop" ,audio-session)))
 
                 ;; Use substitutes from Nonguix.
                 (simple-service 'substitute-servers guix-service-type
@@ -259,6 +259,10 @@
                                 (list `("xdg/mango/config.conf" ,mangowm-config)))
                 (simple-service 'noctalia-session etc-service-type
                                 (list `("xdg/autostart/noctalia-session.desktop" ,noctalia-session)))
+                (simple-service 'login-session etc-service-type
+                                (list `("xdg/autostart/login-sound.desktop" ,login-sound)))
+                (simple-service 'foot-server-session etc-service-type
+                                (list `("xdg/autostart/foot-server-session.desktop" ,foot-server-session)))
                 (simple-service 'dconf-configuration etc-service-type
                                 (list `("dconf/profile/user" ,dconf-profile)
                                       `("dconf/db/local" ,dconf-local-db)))

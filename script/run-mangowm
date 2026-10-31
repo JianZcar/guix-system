@@ -1,12 +1,12 @@
 #!/bin/bash
 set -u
 
-dir=$(mktemp -d /tmp/mangowm-XXXXXX) || exit 1
+dir=$(mktemp -d /tmp/XXXXXX) || exit 1
 trap 'rm -rf "$dir"' EXIT
 
 cat > "$dir/xterm" <<'EOF'
 #!/bin/sh
-exec foot "$@"
+exec footclient "$@"
 EOF
 
 chmod 700 "$dir"
@@ -15,6 +15,28 @@ chmod 700 "$dir/xterm"
 export PATH="$PATH:$dir"
 export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-}:/etc/xdg"
 
-dbus-run-session -- mango -s "dex -a" -c /etc/xdg/mango/config.conf
+dbus-run-session -- bash <<'EOF'
+pipewire &
+pw_pid=$!
+
+wireplumber &
+wp_pid=$!
+
+pipewire-pulse &
+pulse_pid=$!
+
+cleanup() {
+    kill "$pulse_pid" "$wp_pid" "$pw_pid" 2>/dev/null
+    wait "$pulse_pid" "$wp_pid" "$pw_pid" 2>/dev/null
+}
+
+trap cleanup EXIT
+
+mkdir -p ~/.cache/mango
+mango -s "dex -a" -c /etc/xdg/mango/config.conf >> ~/.cache/mango/mango.log 2>&1
+
+pw-play /run/current-system/profile/share/sounds/Yaru/stereo/desktop-logoff.oga
+EOF
+
 status=$?
 exit "$status"
