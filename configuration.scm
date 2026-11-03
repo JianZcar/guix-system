@@ -65,7 +65,7 @@
 
 (define mangowm-patch
   (package
-    (inherit (@ (gnu packages window-management) mangowm))
+    (inherit (@ (mangowm) mangowm-git))
     (name "mangowm-patch")
     (arguments
      (substitute-keyword-arguments (package-arguments (@ (gnu packages
@@ -145,20 +145,32 @@
 
 (define packages-list
   '("acpi" "dbus"
+    "bash"
+    "glib:bin"
     "cryptsetup"
-    "dex"
+    "libva-utils"
+    "vulkan-tools"
+    "intel-media-driver"
     "pipewire"
     "wireplumber"
     "alsa-lib"
     "alsa-utils"
     "alsa-plugins"
+    "dex"
+    "python"
+    "python-numpy"
+    "python-pillow"
+    "onnxruntime:python"
     "xdg-utils"
     "xdg-user-dirs"
     "xdg-desktop-portal"
     "xdg-desktop-portal-gtk"
-    "glib:bin"
+    "xdg-desktop-portal-wlr"
     "gvfs"
-    "noctalia-shell"
+    "wlr-randr"
+    "wdisplays"
+    "wl-mirror"
+    "noctalia-git"
     "playerctl"
     "fontconfig"
     "yaru-theme"
@@ -172,6 +184,7 @@
     "flatpak"
     "ncurses"
     "curl"
+    "jq"
     "git"
     "btop"
     "neovim"
@@ -179,6 +192,8 @@
     "foot"
     "xfconf"
     "icecat"
+    "tumbler"
+    "thunar-volman"
     "gnome-software"))
 
 (define services-list

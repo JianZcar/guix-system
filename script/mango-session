@@ -5,7 +5,7 @@ dir=$(mktemp -d /tmp/XXXXXX) || exit 1
 trap 'rm -rf "$dir"' EXIT
 
 cat > "$dir/xterm" <<'EOF'
-#!/bin/sh
+#!/usr/bin/env bash
 exec footclient "$@"
 EOF
 
@@ -23,6 +23,9 @@ flatpak --user remote-add --if-not-exists \
 mkdir -p "$HOME/.config/mango" && \
   ln -s /etc/xdg/mango/config.conf \
   "$HOME/.config/mango/config.conf" >/dev/null 2>&1
+
+touch "$HOME/.config/mango/noctalia.conf" \
+  "$HOME/.config/mango/monitors.conf"
 
 eval "$(ssh-agent -s)"
 

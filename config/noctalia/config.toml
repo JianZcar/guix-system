@@ -6,14 +6,56 @@ sound_volume = 1.0
 order = [ "default" ]
 
     [bar.default]
-    start = [ "control-center", "workspaces", "launcher", "wallpaper", "media" ]
+    start = [ "group:g1", "group:g2", "group:g3" ]
     center = [ "notifications", "clock", "clipboard" ]
-    end = [ "tray", "network", "bluetooth", "volume", "brightness", "battery", "session" ]
-    margin_ends = 0
+    end = [ "tray", "group:g4", "session" ]
+    margin_ends = "10%"
     panel_overlap = 0
-    radius_top_left = 0
-    radius_top_right = 0
     widget_spacing = 12
+
+        [[bar.default.capsule_group]]
+        accordion = false
+        accordion_direction = "end"
+        border_width = 1.0
+        enabled = true
+        fill = "surface_container"
+        id = "g1"
+        members = [ "control-center", "launcher" ]
+        opacity = 1.0
+        padding = 6.0
+
+        [[bar.default.capsule_group]]
+        accordion = false
+        accordion_direction = "end"
+        border_width = 1.0
+        enabled = true
+        fill = "surface_container"
+        id = "g2"
+        members = [ "workspaces", "layout" ]
+        opacity = 1.0
+        padding = 6.0
+
+        [[bar.default.capsule_group]]
+        accordion = false
+        accordion_direction = "end"
+        border_width = 1.0
+        enabled = true
+        fill = "surface_container"
+        id = "g3"
+        members = [ "wallpaper", "media" ]
+        opacity = 1.0
+        padding = 6.0
+
+        [[bar.default.capsule_group]]
+        accordion = false
+        accordion_direction = "end"
+        border_width = 1.0
+        enabled = true
+        fill = "surface_container"
+        id = "g4"
+        members = [ "network", "bluetooth", "volume", "brightness", "battery" ]
+        opacity = 1.0
+        padding = 6.0 
 
 [brightness]
 minimum_brightness = 0.01
@@ -55,6 +97,20 @@ transition = [ "honeycomb" ]
 transition_duration = 2500
 transition_on_startup = true
 
+[widget.workspaces]
+show_labels = false
+
 [widget.clock]
 anchor = true
 format = "{:%I:%M %p}"
+
+[plugin_settings."ezequiel/mango_layouts"]
+list_mode = true
+panel_position = "center"
+
+[plugins]
+enabled = [ "noctalia/wallpaper_depth", "ezequiel/mango_layouts", "kenn/keybind-cheatsheet", "gambled23/mangowm-keymode" ]
+
+[widget.layout]
+show_text = true
+type = "ezequiel/mango_layouts:btn"
