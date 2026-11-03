@@ -1,0 +1,60 @@
+[audio]
+sound_theme = "Yaru"
+sound_volume = 1.0
+
+[bar]
+order = [ "default" ]
+
+    [bar.default]
+    start = [ "control-center", "workspaces", "launcher", "wallpaper", "media" ]
+    center = [ "notifications", "clock", "clipboard" ]
+    end = [ "tray", "network", "bluetooth", "volume", "brightness", "battery", "session" ]
+    margin_ends = 0
+    panel_overlap = 0
+    radius_top_left = 0
+    radius_top_right = 0
+    widget_spacing = 12
+
+[brightness]
+minimum_brightness = 0.01
+
+[desktop_widgets]
+widget_order = []
+
+    [desktop_widgets.grid]
+    cell_size = 16
+    major_interval = 4
+    visible = true
+
+    [desktop_widgets.widget]
+
+[osd]
+position = "bottom_center"
+position_vertical = "center_right"
+
+[shell]
+date_format = "%x"
+password_style = "random"
+polkit_agent = true
+time_format = "{:%I:%M %p}"
+
+    [shell.greeter_sync]
+    auto_sync = true
+    privilege_command = "pkexec"
+
+[theme]
+mode = "light"
+source = "wallpaper"
+wallpaper_scheme = "m3-tonal-spot"
+
+    [theme.templates]
+    builtin_ids = [ "foot", "gtk3", "gtk4", "mango" ]
+
+[wallpaper]
+transition = [ "honeycomb" ]
+transition_duration = 2500
+transition_on_startup = true
+
+[widget.clock]
+anchor = true
+format = "{:%I:%M %p}"

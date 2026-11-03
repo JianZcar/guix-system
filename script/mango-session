@@ -5,7 +5,7 @@ dir=$(mktemp -d /tmp/XXXXXX) || exit 1
 trap 'rm -rf "$dir"' EXIT
 
 cat > "$dir/xterm" <<'EOF'
-#!/bin/sh
+#!/bin/bash
 exec footclient "$@"
 EOF
 
@@ -14,6 +14,14 @@ chmod 700 "$dir/xterm"
 
 export PATH="$PATH:$dir"
 export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-}:/etc/xdg"
+export NOCTALIA_CONFIG_HOME="/etc/xdg"
+
+flatpak --user remote-add --if-not-exists \
+  flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+mkdir -p "$HOME/.config/mango" && \
+  ln -s /etc/xdg/mango/config.conf \
+  "$HOME/.config/mango/config.conf" >/dev/null 2>&1
 
 dbus-run-session -- bash <<'EOF'
 pipewire &
@@ -33,10 +41,7 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p ~/.cache/mango
-mango -s "dex -a" -c /etc/xdg/mango/config.conf >> ~/.cache/mango/mango.log 2>&1
+mango -s "dex -a" -c /etc/xdg/mango/base.conf >> ~/.cache/mango/mango.log 2>&1
 
 pw-play /run/current-system/profile/share/sounds/Yaru/stereo/desktop-logoff.oga
 EOF
-
-status=$?
-exit "$status"

@@ -54,13 +54,13 @@
 (define greeter-conf
   (local-file "./config/greetd/greeter.toml"))
 
-(define mangowm-script
-  (local-file "./script/run-mangowm"))
+(define mango-session-script
+  (local-file "./script/mango-session"))
 
-(define run-mangowm
-  (program-file "run-mangowm"
+(define mango-session
+  (program-file "mango-session"
                 #~(let ((status (system* #$(file-append bash "/bin/bash")
-                                         #$mangowm-script)))
+                                         #$mango-session-script)))
                     (primitive-exit status))))
 
 (define mangowm-patch
@@ -82,14 +82,19 @@
                     (substitute* desktop
                       (("Exec=mango")
                        (string-append "Exec="
-                                      #$run-mangowm)))))))))))))
+                                      #$mango-session)))))))))))))
 
-(define mangowm-config
+(define mango-base-config
+  (local-file "./config/mango/base.conf"))
+
+(define mango-config
   (local-file "./config/mango/config.conf"))
 
 (define noctalia-session
   (local-file "./config/autostart/noctalia-session.desktop"))
 
+(define noctalia-config
+  (local-file "./config/noctalia/config.toml"))
 
 (define login-sound
   (local-file "./config/autostart/login-sound.desktop"))
@@ -255,10 +260,14 @@
                                                                      '(2 3 4 5
                                                                        6))))))
 
-                (simple-service 'mangowm-config etc-service-type
-                                (list `("xdg/mango/config.conf" ,mangowm-config)))
+                (simple-service 'mango-base-config etc-service-type
+                                (list `("xdg/mango/base.conf" ,mango-base-config)))
+                (simple-service 'mango-config etc-service-type
+                                (list `("xdg/mango/config.conf" ,mango-config)))
                 (simple-service 'noctalia-session etc-service-type
                                 (list `("xdg/autostart/noctalia-session.desktop" ,noctalia-session)))
+                (simple-service 'noctalia-config etc-service-type
+                                (list `("xdg/noctalia/config.toml" ,noctalia-config)))
                 (simple-service 'login-session etc-service-type
                                 (list `("xdg/autostart/login-sound.desktop" ,login-sound)))
                 (simple-service 'foot-server-session etc-service-type

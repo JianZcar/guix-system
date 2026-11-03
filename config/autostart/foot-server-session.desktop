@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Foot server session
+Exec=foot --server
+Terminal=false
