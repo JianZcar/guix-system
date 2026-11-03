@@ -5,7 +5,7 @@ dir=$(mktemp -d /tmp/XXXXXX) || exit 1
 trap 'rm -rf "$dir"' EXIT
 
 cat > "$dir/xterm" <<'EOF'
-#!/bin/bash
+#!/bin/sh
 exec footclient "$@"
 EOF
 
@@ -13,7 +13,8 @@ chmod 700 "$dir"
 chmod 700 "$dir/xterm"
 
 export PATH="$PATH:$dir"
-export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-}:/etc/xdg"
+export XDG_DATA_DIRS="${XDG_DATA_DIRS:+$XDG_DATA_DIRS:}${HOME}/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share"
+export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:+$XDG_CONFIG_DIRS:}/etc/xdg"
 export NOCTALIA_CONFIG_HOME="/etc/xdg"
 
 flatpak --user remote-add --if-not-exists \
@@ -22,6 +23,8 @@ flatpak --user remote-add --if-not-exists \
 mkdir -p "$HOME/.config/mango" && \
   ln -s /etc/xdg/mango/config.conf \
   "$HOME/.config/mango/config.conf" >/dev/null 2>&1
+
+eval "$(ssh-agent -s)"
 
 dbus-run-session -- bash <<'EOF'
 pipewire &
