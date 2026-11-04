@@ -20,18 +20,16 @@ export NOCTALIA_CONFIG_HOME="/etc/xdg"
 flatpak --user remote-add --if-not-exists \
   flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-mkdir -p "$HOME/.config/themes" && \
-  touch "$HOME/.config/themes/noctalia"
-
-touch "$HOME/.config/mango/noctalia.conf" \
-  "$HOME/.config/mango/monitors.conf"
+mkdir -p "$HOME/.config/foot/themes" && \
+  touch "$HOME/.config/foot/themes/noctalia"
 
 mkdir -p "$HOME/.config/mango" && \
-  ln -s /etc/xdg/mango/config.conf \
+  touch "$HOME/.config/mango/noctalia.conf"
+
+ln -s /etc/xdg/mango/config.conf \
   "$HOME/.config/mango/config.conf" >/dev/null 2>&1
 
-mkdir -p "$HOME/.config/foot" && \
-  ln -s /etc/xdg/foot/foot.ini \
+ln -s /etc/xdg/foot/foot.ini \
   "$HOME/.config/foot/foot.ini" >/dev/null 2>&1
 
 eval "$(ssh-agent -s)"

@@ -338,7 +338,7 @@
                                   (keyboard-layout keyboard-layout)))
                     (mapped-devices (list (mapped-device
                                             (source (uuid
-                                                     "b34ddaca-8a19-425a-9661-83e387300a18"))
+                                                     "b4a9f8bc-2b2e-46ac-a8ff-0c50cb88efe3"))
                                             (target "cryptroot")
                                             (type luks-device-mapping))))
 
