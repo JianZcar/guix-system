@@ -42,7 +42,7 @@ order = [ "default" ]
         enabled = true
         fill = "surface_container"
         id = "g3"
-        members = [ "wallpaper", "media" ]
+        members = [ "wallpaper", "depth", "media" ]
         opacity = 1.0
         padding = 6.0
 
@@ -114,3 +114,6 @@ enabled = [ "noctalia/wallpaper_depth", "ezequiel/mango_layouts", "kenn/keybind-
 [widget.layout]
 show_text = true
 type = "ezequiel/mango_layouts:btn"
+
+[widget.depth]
+type = "noctalia/wallpaper_depth:bar"
