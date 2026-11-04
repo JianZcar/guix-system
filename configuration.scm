@@ -96,6 +96,9 @@
 (define noctalia-config
   (local-file "./config/noctalia/config.toml"))
 
+(define foot-config
+  (local-file "./config/foot/foot.ini"))
+
 (define login-sound
   (local-file "./config/autostart/login-sound.desktop"))
 
@@ -285,6 +288,8 @@
                                 (list `("xdg/noctalia/config.toml" ,noctalia-config)))
                 (simple-service 'login-session etc-service-type
                                 (list `("xdg/autostart/login-sound.desktop" ,login-sound)))
+                (simple-service 'foot-config etc-service-type
+                                (list `("xdg/foot/foot.ini" ,foot-config)))
                 (simple-service 'foot-server-session etc-service-type
                                 (list `("xdg/autostart/foot-server-session.desktop" ,foot-server-session)))
                 (simple-service 'dconf-configuration etc-service-type
