@@ -1,5 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Login sound
-Exec=sh -c 'sleep 1 && pw-play /run/current-system/profile/share/sounds/Yaru/stereo/desktop-login.oga'
-Terminal=false

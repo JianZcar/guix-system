@@ -6,6 +6,7 @@
              (guix channels)
              (gnu packages gl)
              (gnu services pm)
+             (gnu packages ssh)
              (gnu services ssh)
              (gnu packages bash)
              (gnu packages curl)
@@ -17,7 +18,10 @@
              (gnu services audio)
              (gnu services sound)
              (gnu packages gnome)
+             (gnu system accounts)
              (gnu services desktop)
+             (gnu packages terminals)
+             (gnu services containers)
              (gnu services networking)
              (nonguix)
              (nongnu packages nvidia)
@@ -57,6 +61,135 @@
 (define mango-session-script
   (local-file "./script/mango-session"))
 
+(define desktop-shepherd-conf
+  (scheme-file "desktop-shepherd.scm"
+               #~(begin
+                   (use-modules (shepherd service))
+
+                   (define (log-file name)
+                     (string-append (or (getenv "XDG_STATE_HOME")
+                                        (string-append (getenv "HOME")
+                                                       "/.local/state"))
+                                    "/desktop-shepherd/" name ".log"))
+
+                   (register-services (list (service '(ssh-agent)
+                                                     #:start (make-forkexec-constructor
+                                                              (list #$(file-append
+                                                                       openssh
+                                                                       "/bin/ssh-agent")
+                                                                    "-D" "-a"
+                                                                    (getenv
+                                                                     "SSH_AUTH_SOCK"))
+                                                              #:log-file (log-file
+                                                                          "ssh-agent"))
+                                                     #:stop (make-kill-destructor)
+                                                     #:respawn? #t
+                                                     #:respawn-delay 1
+                                                     #:respawn-limit '(5 . 30))
+                                            (service '(foot-server)
+                                                     #:start (make-forkexec-constructor
+                                                              (list #$(file-append
+                                                                       foot
+                                                                       "/bin/foot")
+                                                               "--server")
+                                                              #:log-file (log-file
+                                                                          "foot-server"))
+                                                     #:stop (make-kill-destructor)
+                                                     #:respawn? #t
+                                                     #:respawn-delay 1
+                                                     #:respawn-limit '(5 . 30))
+
+                                            (service '(pipewire)
+                                                     #:start (make-forkexec-constructor
+                                                              (list #$(file-append
+                                                                       pipewire
+                                                                       "/bin/pipewire"))
+                                                              #:log-file (log-file
+                                                                          "pipewire"))
+                                                     #:stop (make-kill-destructor)
+                                                     #:respawn? #t
+                                                     #:respawn-delay 1
+                                                     #:respawn-limit '(5 . 30))
+
+                                            (service '(wireplumber)
+                                                     #:requirement '(pipewire)
+                                                     #:start (make-forkexec-constructor
+                                                              (list #$(file-append
+                                                                       wireplumber
+                                                                       "/bin/wireplumber"))
+                                                              #:log-file (log-file
+                                                                          "wireplumber"))
+                                                     #:stop (make-kill-destructor)
+                                                     #:respawn? #t
+                                                     #:respawn-delay 1
+                                                     #:respawn-limit '(5 . 30))
+
+                                            (service '(pipewire-pulse)
+                                                     #:requirement '(pipewire)
+                                                     #:start (make-forkexec-constructor
+                                                              (list #$(file-append
+                                                                       pipewire
+                                                                       "/bin/pipewire-pulse"))
+                                                              #:log-file (log-file
+                                                                          "pipewire-pulse"))
+                                                     #:stop (make-kill-destructor)
+                                                     #:respawn? #t
+                                                     #:respawn-delay 1
+                                                     #:respawn-limit '(5 . 30))
+
+                                            (service '(noctalia)
+                                                     #:start (make-forkexec-constructor
+                                                              (list #$(file-append
+                                                                       (@ (noctalia)
+                                                                        noctalia-git)
+                                                                       "/bin/noctalia"))
+                                                              #:log-file (log-file
+                                                                          "noctalia"))
+                                                     #:stop (make-kill-destructor)
+                                                     #:respawn? #t
+                                                     #:respawn-delay 1
+                                                     #:respawn-limit '(5 . 30)
+                                                     #:requirement '(pipewire
+                                                                     wireplumber
+                                                                     pipewire-pulse))))
+
+                   (start-in-the-background '(ssh-agent foot-server pipewire
+                                                        wireplumber
+                                                        pipewire-pulse
+                                                        noctalia)))))
+
+(define desktop-shepherd
+  (program-file "desktop-shepherd"
+                #~(begin
+                    (let* ((runtime (or (getenv "XDG_RUNTIME_DIR")
+                                        (string-append "/run/user/"
+                                                       (number->string (getuid)))))
+                           (state (or (getenv "XDG_STATE_HOME")
+                                      (string-append (getenv "HOME")
+                                                     "/.local/state")))
+                           (socket (string-append runtime
+                                                  "/desktop-shepherd.socket"))
+                           (pidfile (string-append runtime
+                                                   "/desktop-shepherd.pid"))
+                           (logdir (string-append state "/desktop-shepherd")))
+                      (system* #$(file-append (@ (gnu packages base) coreutils)
+                                              "/bin/mkdir") "-p" logdir)
+                      (false-if-exception (delete-file socket))
+                      (false-if-exception (delete-file pidfile))
+                      (execl #$(file-append (@ (gnu packages admin) shepherd)
+                                            "/bin/shepherd")
+                             "shepherd"
+                             "--silent"
+                             (string-append "--socket=" socket)
+                             (string-append "--pid=" pidfile)
+                             (string-append "--logfile=" logdir
+                                            "/desktop-shepherd.log")
+                             (string-append "--config="
+                                            #$desktop-shepherd-conf))))))
+
+(define desktop-shepherd-autostart
+  (local-file "./config/autostart/desktop-shepherd.desktop"))
+
 (define mango-session
   (program-file "mango-session"
                 #~(let ((status (system* #$(file-append bash "/bin/bash")
@@ -68,9 +201,7 @@
     (inherit (@ (mangowm) mangowm-git))
     (name "mangowm-patch")
     (arguments
-     (substitute-keyword-arguments (package-arguments (@ (gnu packages
-                                                          window-management)
-                                                         mangowm))
+     (substitute-keyword-arguments (package-arguments (@ (mangowm) mangowm-git))
        ((#:phases phases
          #~%standard-phases)
         #~(modify-phases #$phases
@@ -90,20 +221,11 @@
 (define mango-config
   (local-file "./config/mango/config.conf"))
 
-(define noctalia-session
-  (local-file "./config/autostart/noctalia-session.desktop"))
-
 (define noctalia-config
   (local-file "./config/noctalia/config.toml"))
 
 (define foot-config
   (local-file "./config/foot/foot.ini"))
-
-(define login-sound
-  (local-file "./config/autostart/login-sound.desktop"))
-
-(define foot-server-session
-  (local-file "./config/autostart/foot-server-session.desktop"))
 
 (define dconf-profile
   (local-file "./config/dconf/user"))
@@ -159,6 +281,7 @@
     "alsa-lib"
     "alsa-utils"
     "alsa-plugins"
+    "podman"
     "dex"
     "python"
     "python-numpy"
@@ -199,6 +322,19 @@
     "thunar-volman"
     "gnome-software"))
 
+(define user-jian
+  (user-account
+    (name "jian")
+    (comment "Jian Zcar")
+    (group "users")
+    (home-directory "/home/jian")
+    (supplementary-groups '("wheel" "netdev" "audio" "video"))))
+
+(define podman-subids
+  (map (lambda (user)
+         (subid-range (name user)))
+       '("jian")))
+
 (define services-list
   (append (list (service polkit-service-type)
                 (service elogind-service-type)
@@ -217,10 +353,6 @@
                 ;; Networking
                 (service wpa-supplicant-service-type)
                 (service network-manager-service-type)
-                (simple-service 'resolv-conf etc-service-type
-                                (list `("resolv.conf" ,(plain-file
-                                                        "resolv.conf"
-                                                        "nameserver 1.1.1.1\nnameserver 8.8.8.8\n"))))
 
                 ;; To configure OpenSSH, pass an 'openssh-configuration'
                 ;; record as a second argument to 'service' below.
@@ -234,6 +366,10 @@
                 (service rtkit-service-type)
                 (simple-service 'asound-conf etc-service-type
                                 (list `("asound.conf" ,asound-conf)))
+
+                (service rootless-podman-service-type
+                         (rootless-podman-configuration (subuids podman-subids)
+                                                        (subgids podman-subids)))
 
                 ;; Use substitutes from Nonguix.
                 (simple-service 'substitute-servers guix-service-type
@@ -282,16 +418,13 @@
                                 (list `("xdg/mango/base.conf" ,mango-base-config)))
                 (simple-service 'mango-config etc-service-type
                                 (list `("xdg/mango/config.conf" ,mango-config)))
-                (simple-service 'noctalia-session etc-service-type
-                                (list `("xdg/autostart/noctalia-session.desktop" ,noctalia-session)))
+                (simple-service 'desktop-shepherd etc-service-type
+                                (list `("xdg/desktop-shepherd" ,desktop-shepherd)
+                                      `("xdg/autostart/desktop-shepherd.desktop" ,desktop-shepherd-autostart)))
                 (simple-service 'noctalia-config etc-service-type
                                 (list `("xdg/noctalia/config.toml" ,noctalia-config)))
-                (simple-service 'login-session etc-service-type
-                                (list `("xdg/autostart/login-sound.desktop" ,login-sound)))
                 (simple-service 'foot-config etc-service-type
                                 (list `("xdg/foot/foot.ini" ,foot-config)))
-                (simple-service 'foot-server-session etc-service-type
-                                (list `("xdg/autostart/foot-server-session.desktop" ,foot-server-session)))
                 (simple-service 'dconf-configuration etc-service-type
                                 (list `("dconf/profile/user" ,dconf-profile)
                                       `("dconf/db/local" ,dconf-local-db)))
@@ -313,14 +446,7 @@
                     (host-name "rena")
 
                     ;; The list of user accounts ('root' is implicit).
-                    (users (cons* (user-account
-                                    (name "jian")
-                                    (comment "Jian Zcar")
-                                    (group "users")
-                                    (home-directory "/home/jian")
-                                    (supplementary-groups '("wheel" "netdev"
-                                                            "audio" "video")))
-                                  %base-user-accounts))
+                    (users (cons* user-jian %base-user-accounts))
                     (kernel linux)
                     (firmware (cons* linux-firmware %base-firmware))
                     (packages (append (list mangowm-patch thunar-patch)

@@ -17,6 +17,14 @@ export XDG_DATA_DIRS="${XDG_DATA_DIRS:+$XDG_DATA_DIRS:}${HOME}/.local/share/flat
 export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:+$XDG_CONFIG_DIRS:}/etc/xdg"
 export NOCTALIA_CONFIG_HOME="/etc/xdg"
 
+export XDG_CURRENT_DESKTOP=mango
+export XDG_SESSION_TYPE=wayland
+export XDG_SESSION_DESKTOP=mango
+export MOZ_ENABLE_WAYLAND=1
+export QT_QPA_PLATFORM=wayland
+
+export SSH_AUTH_SOCK="$HOME/.ssh/agent/ssh-agent.sock"
+
 flatpak --user remote-add --if-not-exists \
   flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
@@ -32,27 +40,39 @@ ln -s /etc/xdg/mango/config.conf \
 ln -s /etc/xdg/foot/foot.ini \
   "$HOME/.config/foot/foot.ini" >/dev/null 2>&1
 
-eval "$(ssh-agent -s)"
+runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+shepherd_pidfile="$runtime/desktop-shepherd.pid"
+shepherd_socket="$runtime/desktop-shepherd.socket"
 
-dbus-run-session -- bash <<'EOF'
-pipewire &
-pw_pid=$!
-
-wireplumber &
-wp_pid=$!
-
-pipewire-pulse &
-pulse_pid=$!
+mkdir -p "$HOME/.cache/mango"
 
 cleanup() {
-    kill "$pulse_pid" "$wp_pid" "$pw_pid" 2>/dev/null
-    wait "$pulse_pid" "$wp_pid" "$pw_pid" 2>/dev/null
+  if [ -f "$shepherd_pidfile" ]; then
+    pid=$(cat "$shepherd_pidfile" 2>/dev/null || true)
+    if [ -n "${pid:-}" ]; then
+      kill "$pid" 2>/dev/null || true
+
+      i=0
+      while kill -0 "$pid" 2>/dev/null && [ "$i" -lt 50 ]; do
+        sleep 0.1
+        i=$((i + 1))
+      done
+
+      kill -KILL "$pid" 2>/dev/null || true
+    fi
+  fi
+
+  rm -f "$shepherd_pidfile" "$shepherd_socket"
+  rm -rf "$dir"
 }
 
 trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-mkdir -p ~/.cache/mango
-mango -s "dex -a" -c /etc/xdg/mango/base.conf >> ~/.cache/mango/mango.log 2>&1
-
-pw-play /run/current-system/profile/share/sounds/Yaru/stereo/desktop-logoff.oga
+dbus-run-session -- bash <<'EOF'
+  mango -s "dex -a" -c /etc/xdg/mango/base.conf \
+    >> "$HOME/.cache/mango/mango.log" 2>&1
+  status=$?
+  exit "$status"
 EOF
