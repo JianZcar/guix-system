@@ -117,3 +117,6 @@ type = "ezequiel/mango_layouts:btn"
 
 [widget.depth]
 type = "noctalia/wallpaper_depth:bar"
+
+[hooks]
+started = "canberra-gtk-play -i desktop-login"

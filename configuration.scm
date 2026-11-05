@@ -269,58 +269,98 @@
   (local-file "./config/thunar/thunar.xml"))
 
 (define packages-list
-  '("acpi" "dbus"
+  '( ;System utilities
+     "acpi"
     "bash"
-    "glib:bin"
     "cryptsetup"
+    "dbus"
+    "glib:bin"
+    "ncurses"
+    "curl"
+    "jq"
+    "git"
+    "git-lfs"
+    "openssh"
+    "btop"
+
+    ;; Graphics, GPU and video
     "libva-utils"
     "vulkan-tools"
     "intel-media-driver"
+
+    ;; Audio
     "pipewire"
     "wireplumber"
     "alsa-lib"
     "alsa-utils"
     "alsa-plugins"
+    "libcanberra"
+
+    ;; Containers
     "podman"
-    "dex"
+
+    ;; Python and machine learning
     "python"
     "python-numpy"
     "python-pillow"
     "onnxruntime:python"
+
+    ;; XDG and desktop integration
     "xdg-utils"
     "xdg-user-dirs"
     "xdg-desktop-portal"
     "xdg-desktop-portal-gtk"
     "xdg-desktop-portal-wlr"
     "gvfs"
+    "dex"
+    "flatpak"
+    "gnome-software"
+
+    ;; Wayland utilities
     "wlr-randr"
     "wdisplays"
     "wl-mirror"
+    "wl-clipboard"
+
+    ;; Desktop environment
     "noctalia-git"
+    "xfconf"
+    "foot"
     "playerctl"
-    "fontconfig"
+
+    ;; Themes and icons
     "yaru-theme"
     "adw-gtk3-theme"
     "adwaita-icon-theme"
     "papirus-icon-theme"
+
+    ;; Fonts
+    "fontconfig"
     "font-adwaita"
+    "font-dejavu"
+    "font-gnu-unifont"
     "font-nerd-jetbrains-mono"
     "font-nerd-symbols"
-    "wl-clipboard"
-    "flatpak"
-    "ncurses"
-    "curl"
-    "jq"
-    "git"
-    "btop"
-    "neovim"
-    "emacs"
-    "foot"
-    "xfconf"
-    "icecat"
+
+    "font-google-noto-sans-cjk"
+    "font-google-noto-serif-cjk"
+    "font-google-noto-emoji"
+
+    "font-adobe-source-han-sans"
+
+    ;; Internationalization
+    "glibc-locales"
+
+    ;; File manager and thumbnails
     "tumbler"
     "thunar-volman"
-    "gnome-software"))
+
+    ;; Browser
+    "icecat"
+
+    ;; Editors
+    "neovim"
+    "emacs"))
 
 (define user-jian
   (user-account
@@ -334,6 +374,41 @@
   (map (lambda (user)
          (subid-range (name user)))
        '("jian")))
+
+(define firewall-rules
+  (plain-file "nftables.conf"
+              "
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority filter;
+    policy drop;
+
+    # Allow loopback
+    iifname \"lo\" accept
+
+    # Allow established connections and replies
+    ct state established,related accept
+
+    # Allow IPv6 neighbor discovery and router advertisements
+    meta l4proto ipv6-icmp accept
+
+    # Allow ping
+    ip protocol icmp accept
+  }
+
+  chain forward {
+    type filter hook forward priority filter;
+    policy drop;
+  }
+
+  chain output {
+    type filter hook output priority filter;
+    policy accept;
+  }
+}
+"))
 
 (define services-list
   (append (list (service polkit-service-type)
@@ -354,10 +429,8 @@
                 (service wpa-supplicant-service-type)
                 (service network-manager-service-type)
 
-                ;; To configure OpenSSH, pass an 'openssh-configuration'
-                ;; record as a second argument to 'service' below.
-                (service openssh-service-type)
-                (service tor-service-type)
+                (service nftables-service-type
+                         (nftables-configuration (ruleset firewall-rules)))
 
                 (service ntp-service-type)
                 (service cups-service-type)
