@@ -33,11 +33,13 @@
                                  #:kernel-mode-setting? #t
                                  #:dynamic-boost? #t))
 
+; fix for no generated resolv.conf
+; sudo rm /etc/resolv.conf
+; sudo nmcli general reload dns-rc
 (define networkmanager-polkit-rules
   (file-union "networkmanager-polkit-rules"
               `(("share/polkit-1/rules.d/10-networkmanager.rules" ,(local-file
                                                                     "./config/polkit/10-networkmanager.rules")))))
-
 (define asound-conf
   (mixed-text-file "asound.conf"
                    "pcm_type.pipewire {\n"
