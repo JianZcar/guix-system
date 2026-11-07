@@ -388,39 +388,8 @@
        '("jian")))
 
 (define firewall-rules
-  (plain-file "nftables.conf"
-              "
-flush ruleset
+  (local-file "./config/firewall/nftables.conf"))
 
-table inet filter {
-  chain input {
-    type filter hook input priority filter;
-    policy drop;
-
-    # Allow loopback
-    iifname \"lo\" accept
-
-    # Allow established connections and replies
-    ct state established,related accept
-
-    # Allow IPv6 neighbor discovery and router advertisements
-    meta l4proto ipv6-icmp accept
-
-    # Allow ping
-    ip protocol icmp accept
-  }
-
-  chain forward {
-    type filter hook forward priority filter;
-    policy drop;
-  }
-
-  chain output {
-    type filter hook output priority filter;
-    policy accept;
-  }
-}
-"))
 
 (define services-list
   (append (list ;Use substitutes from Nonguix.
@@ -442,7 +411,7 @@ table inet filter {
 
                 (service earlyoom-service-type
                          (earlyoom-configuration (minimum-available-memory 10)
-                                                 (minimum-free-swap 100)
+                                                 (minimum-free-swap 10)
                                                  (avoid-regexp
                                                   "mango|pipewire|wireplumber|noctalia")))
 
