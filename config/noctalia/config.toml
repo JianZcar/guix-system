@@ -53,7 +53,7 @@ order = [ "default" ]
         enabled = true
         fill = "surface_container"
         id = "g4"
-        members = [ "network", "bluetooth", "volume", "brightness", "battery" ]
+        members = [ "tailnet", "network", "bluetooth", "volume", "brightness", "battery" ]
         opacity = 1.0
         padding = 6.0 
 
@@ -109,7 +109,7 @@ list_mode = true
 panel_position = "center"
 
 [plugins]
-enabled = [ "noctalia/wallpaper_depth", "ezequiel/mango_layouts", "kenn/keybind-cheatsheet", "gambled23/mangowm-keymode" ]
+enabled = [ "noctalia/wallpaper_depth", "ezequiel/mango_layouts", "kenn/keybind-cheatsheet", "gambled23/mangowm-keymode", "rylos/tailnet" ]
 
 [widget.layout]
 show_text = true
@@ -117,6 +117,9 @@ type = "ezequiel/mango_layouts:btn"
 
 [widget.depth]
 type = "noctalia/wallpaper_depth:bar"
+
+[widget.tailnet]
+type = "rylos/tailnet:bar"
 
 [hooks]
 started = "canberra-gtk-play -i desktop-login"
