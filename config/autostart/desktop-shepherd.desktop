@@ -1,5 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Desktop Shepherd
-Exec=/etc/xdg/desktop-shepherd
-Terminal=false

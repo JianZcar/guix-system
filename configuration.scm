@@ -1,31 +1,26 @@
 ;; Indicate which modules to import to access the variables
 ;; used in this configuration.
-(use-modules (gnu)
-             (guix utils)
+(use-modules (guix utils)
              (guix packages)
              (guix channels)
-             (gnu packages gl)
+             (gnu)
              (gnu services pm)
              (gnu packages ssh)
-             (gnu services ssh)
-             (gnu packages bash)
-             (gnu packages curl)
              (gnu services dbus)
-             (gnu services cups)
-             (gnu services xorg)
+             (gnu packages bash)
              (gnu packages linux)
              (gnu services linux)
-             (gnu services audio)
-             (gnu services sound)
              (gnu packages gnome)
              (gnu system accounts)
              (gnu services desktop)
              (gnu packages terminals)
              (gnu services containers)
              (gnu services networking)
+             (gnu packages password-utils)
              (nonguix)
              (nongnu packages nvidia)
              (nonguix transformations)
+             (rosenthal services networking)
              (midnight services noctalia-greeter))
 
 (define nonguix-signing-key
@@ -86,6 +81,7 @@
                                                      #:respawn? #t
                                                      #:respawn-delay 1
                                                      #:respawn-limit '(5 . 30))
+
                                             (service '(foot-server)
                                                      #:start (make-forkexec-constructor
                                                               (list #$(file-append
@@ -188,7 +184,14 @@
                                             #$desktop-shepherd-conf))))))
 
 (define desktop-shepherd-autostart
-  (local-file "./config/autostart/desktop-shepherd.desktop"))
+  (mixed-text-file "desktop-shepherd.desktop"
+                   "[Desktop Entry]\n"
+                   "Type=Application\n"
+                   "Name=Desktop Shepherd\n"
+                   "Exec="
+                   (file-append desktop-shepherd)
+                   "\n"
+                   "Terminal=false\n"))
 
 (define mango-session
   (program-file "mango-session"
@@ -212,8 +215,8 @@
                   (when (file-exists? desktop)
                     (substitute* desktop
                       (("Exec=mango")
-                       (string-append "Exec="
-                                      #$mango-session)))))))))))))
+                       (string-append "Exec=sh -c \"exec "
+                                      #$mango-session " >/dev/null 2>&1\"")))))))))))))
 
 (define mango-base-config
   (local-file "./config/mango/base.conf"))
@@ -272,29 +275,39 @@
   '( ;System utilities
      "acpi"
     "bash"
-    "cryptsetup"
+    "btop"
+    "curl"
     "dbus"
     "glib:bin"
-    "ncurses"
-    "curl"
     "jq"
+    "ncurses"
+    "btrfs-progs"
+    "cryptsetup"
+    "libsecret"
+    "keepassxc"
+
+    ;; Networking
+    "openssh"
+    "openvpn"
+    "network-manager-openvpn"
+
+    ;; Version control
     "git"
     "git-lfs"
-    "openssh"
-    "btop"
 
-    ;; Graphics, GPU and video
+    ;; Graphics and video
     "libva-utils"
     "vulkan-tools"
     "intel-media-driver"
 
     ;; Audio
-    "pipewire"
-    "wireplumber"
     "alsa-lib"
     "alsa-utils"
     "alsa-plugins"
     "libcanberra"
+    "pipewire"
+    "wireplumber"
+    "playerctl"
 
     ;; Containers
     "podman"
@@ -305,7 +318,7 @@
     "python-pillow"
     "onnxruntime:python"
 
-    ;; XDG and desktop integration
+    ;; Desktop integration
     "xdg-utils"
     "xdg-user-dirs"
     "xdg-desktop-portal"
@@ -316,7 +329,7 @@
     "flatpak"
     "gnome-software"
 
-    ;; Wayland utilities
+    ;; Wayland
     "wlr-randr"
     "wdisplays"
     "wl-mirror"
@@ -326,7 +339,6 @@
     "noctalia-git"
     "xfconf"
     "foot"
-    "playerctl"
 
     ;; Themes and icons
     "yaru-theme"
@@ -341,22 +353,17 @@
     "font-gnu-unifont"
     "font-nerd-jetbrains-mono"
     "font-nerd-symbols"
-
     "font-google-noto-sans-cjk"
     "font-google-noto-serif-cjk"
     "font-google-noto-emoji"
-
     "font-adobe-source-han-sans"
 
-    ;; Internationalization
+    ;; Localization
     "glibc-locales"
 
-    ;; File manager and thumbnails
+    ;; File manager
     "tumbler"
     "thunar-volman"
-
-    ;; Browser
-    "icecat"
 
     ;; Editors
     "neovim"
@@ -411,40 +418,7 @@ table inet filter {
 "))
 
 (define services-list
-  (append (list (service polkit-service-type)
-                (service elogind-service-type)
-
-                (service upower-service-type)
-                (service power-profiles-daemon-service-type)
-
-                (service udisks-service-type)
-                (service zram-device-service-type
-                         (zram-device-configuration (size "12G")
-                                                    (compression-algorithm 'zstd)
-                                                    (priority 100)))
-
-                (service bluetooth-service-type)
-
-                ;; Networking
-                (service wpa-supplicant-service-type)
-                (service network-manager-service-type)
-
-                (service nftables-service-type
-                         (nftables-configuration (ruleset firewall-rules)))
-
-                (service ntp-service-type)
-                (service cups-service-type)
-
-                ;; Sound
-                (service rtkit-service-type)
-                (simple-service 'asound-conf etc-service-type
-                                (list `("asound.conf" ,asound-conf)))
-
-                (service rootless-podman-service-type
-                         (rootless-podman-configuration (subuids podman-subids)
-                                                        (subgids podman-subids)))
-
-                ;; Use substitutes from Nonguix.
+  (append (list ;Use substitutes from Nonguix.
                 (simple-service 'substitute-servers guix-service-type
                                 (guix-extension (substitute-urls (list
                                                                   "https://substitutes.nonguix.org"))
@@ -455,6 +429,47 @@ table inet filter {
                                 (guix-extension (substitute-urls '("https://cache-cdn.guix.moe"))
                                                 (authorized-keys (list
                                                                   nonguix-signing-key))))
+
+                (service zram-device-service-type
+                         (zram-device-configuration (size "6G")
+                                                    (compression-algorithm 'zstd)
+                                                    (priority 100)))
+
+                (service earlyoom-service-type
+                         (earlyoom-configuration (minimum-available-memory 10)
+                                                 (minimum-free-swap 100)
+                                                 (avoid-regexp
+                                                  "mango|pipewire|wireplumber|noctalia")))
+
+                (service fstrim-service-type)
+                (service polkit-service-type)
+                (service elogind-service-type)
+
+                (service upower-service-type)
+                (service power-profiles-daemon-service-type)
+
+                (service udisks-service-type)
+
+                (service bluetooth-service-type)
+
+                ;; Networking
+                (service wpa-supplicant-service-type)
+                (service network-manager-service-type)
+                (service tailscale-service-type)
+
+                (service nftables-service-type
+                         (nftables-configuration (ruleset firewall-rules)))
+
+                (service ntp-service-type)
+
+                ;; Sound
+                (service rtkit-service-type)
+                (simple-service 'asound-conf etc-service-type
+                                (list `("asound.conf" ,asound-conf)))
+
+                (service rootless-podman-service-type
+                         (rootless-podman-configuration (subuids podman-subids)
+                                                        (subgids podman-subids)))
 
                 (service noctalia-greeter-service-type
                          (noctalia-greeter-configuration (cursor (noctalia-greeter-cursor-configuration
@@ -492,8 +507,7 @@ table inet filter {
                 (simple-service 'mango-config etc-service-type
                                 (list `("xdg/mango/config.conf" ,mango-config)))
                 (simple-service 'desktop-shepherd etc-service-type
-                                (list `("xdg/desktop-shepherd" ,desktop-shepherd)
-                                      `("xdg/autostart/desktop-shepherd.desktop" ,desktop-shepherd-autostart)))
+                                (list `("xdg/autostart/desktop-shepherd.desktop" ,desktop-shepherd-autostart)))
                 (simple-service 'noctalia-config etc-service-type
                                 (list `("xdg/noctalia/config.toml" ,noctalia-config)))
                 (simple-service 'foot-config etc-service-type
@@ -548,6 +562,9 @@ table inet filter {
                                            (mount-point "/")
                                            (device "/dev/mapper/cryptroot")
                                            (type "btrfs")
+                                           (flags '(no-atime))
+                                           (options
+                                            "compress=zstd:3,space_cache=v2")
                                            (dependencies mapped-devices))
                                          (file-system
                                            (mount-point "/boot/efi")
