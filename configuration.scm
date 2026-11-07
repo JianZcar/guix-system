@@ -33,6 +33,11 @@
                                  #:kernel-mode-setting? #t
                                  #:dynamic-boost? #t))
 
+(define networkmanager-polkit-rules
+  (file-union "networkmanager-polkit-rules"
+              `(("share/polkit-1/rules.d/10-networkmanager.rules" ,(local-file
+                                                                    "./config/polkit/10-networkmanager.rules")))))
+
 (define asound-conf
   (mixed-text-file "asound.conf"
                    "pcm_type.pipewire {\n"
@@ -442,7 +447,9 @@ table inet filter {
                                                   "mango|pipewire|wireplumber|noctalia")))
 
                 (service fstrim-service-type)
-                (service polkit-service-type)
+                (service polkit-service-type
+                         (polkit-configuration (actions (list
+                                                         networkmanager-polkit-rules))))
                 (service elogind-service-type)
 
                 (service upower-service-type)

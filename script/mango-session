@@ -24,9 +24,14 @@ export MOZ_ENABLE_WAYLAND=1
 export QT_QPA_PLATFORM=wayland
 
 export SSH_AUTH_SOCK="$HOME/.ssh/agent/ssh-agent.sock"
+rm -f "$SSH_AUTH_SOCK"
 
 flatpak --user remote-add --if-not-exists \
   flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+mkdir -p "$HOME/.ssh/agent" && \
+  chmod 700 "$HOME/.ssh" && \
+  chmod 700 "$HOME/.ssh/agent"
 
 mkdir -p "$HOME/.config/foot/themes" && \
   touch "$HOME/.config/foot/themes/noctalia"
@@ -49,7 +54,7 @@ mkdir -p "$HOME/.cache/mango"
 cleanup() {
   herd -s "$shepherd_socket" stop shepherd || return
 
-  rm -f "$shepherd_pidfile" "$shepherd_socket" "$SSH_AUTH_SOCK"
+  rm -f "$shepherd_pidfile" "$shepherd_socket"
   rm -rf "$dir"
 }
 
