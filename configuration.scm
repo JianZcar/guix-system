@@ -23,6 +23,9 @@
              (rosenthal services networking)
              (midnight services noctalia-greeter))
 
+(define system-hostname
+  "rena")
+
 (define nonguix-signing-key
   (plain-file "nonguix.pub"
    "(public-key (ecc (curve Ed25519) (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))"))
@@ -392,7 +395,6 @@
 (define firewall-rules
   (local-file "./config/firewall/nftables.conf"))
 
-
 (define services-list
   (append (list ;Use substitutes from Nonguix.
                 (simple-service 'substitute-servers guix-service-type
@@ -420,7 +422,8 @@
                 (service fstrim-service-type)
                 (service polkit-service-type
                          (polkit-configuration (actions (list
-                                                         networkmanager-polkit-rules))))
+                                                         networkmanager-polkit-rules
+                                                         keepassxc))))
                 (service elogind-service-type)
 
                 (service upower-service-type)
@@ -428,7 +431,8 @@
 
                 (service udisks-service-type)
 
-                (service bluetooth-service-type)
+                (service bluetooth-service-type
+                         (bluetooth-configuration (name system-hostname)))
 
                 ;; Networking
                 (service wpa-supplicant-service-type)
@@ -508,7 +512,7 @@
                     (locale "en_PH.utf8")
                     (timezone "Asia/Manila")
                     (keyboard-layout (keyboard-layout "us"))
-                    (host-name "rena")
+                    (host-name system-hostname)
 
                     ;; The list of user accounts ('root' is implicit).
                     (users (cons* user-jian %base-user-accounts))
