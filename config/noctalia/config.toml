@@ -92,6 +92,9 @@ wallpaper_scheme = "m3-tonal-spot"
     [theme.templates]
     builtin_ids = [ "foot", "gtk3", "gtk4", "mango" ]
 
+    [theme.templates]
+    community_ids = [ "fuzzel" ]
+
 [wallpaper]
 transition = [ "honeycomb" ]
 transition_duration = 2500

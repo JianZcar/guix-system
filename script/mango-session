@@ -22,6 +22,7 @@ export XDG_SESSION_TYPE=wayland
 export XDG_SESSION_DESKTOP=mango
 export MOZ_ENABLE_WAYLAND=1
 export QT_QPA_PLATFORM=wayland
+export QT_QPA_PLATFORMTHEME=gtk3
 
 export SSH_AUTH_SOCK="$HOME/.ssh/agent/ssh-agent.sock"
 rm -f "$SSH_AUTH_SOCK"

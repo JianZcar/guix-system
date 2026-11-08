@@ -16,6 +16,7 @@
              (gnu packages terminals)
              (gnu services containers)
              (gnu services networking)
+             (gnu packages freedesktop)
              (gnu packages password-utils)
              (gnu services virtualization)
              (nonguix)
@@ -61,11 +62,33 @@
                    "pcm.!default { type pipewire }\n"
                    "ctl.!default { type pipewire }\n"))
 
+(define obs-virtual-camera-conf
+  (plain-file "v4l2loopback.conf"
+   "options v4l2loopback devices=1 video_nr=10 card_label=\"OBS Virtual Camera\" exclusive_caps=1
+"))
+
 (define greeter-conf
   (local-file "./config/greetd/greeter.toml"))
 
 (define mango-session-script
   (local-file "./script/mango-session"))
+
+(define xdg-desktop-portal-wlr-patch
+  (package
+    (inherit xdg-desktop-portal-wlr)
+    (name "xdg-desktop-portal-wlr-patch")
+    (arguments
+     (substitute-keyword-arguments (package-arguments xdg-desktop-portal-wlr)
+       ((#:phases phases
+         #~%standard-phases)
+        #~(modify-phases #$phases
+            (add-after 'install 'patch-wlr-portal
+              (lambda* (#:key outputs #:allow-other-keys)
+                (let ((portal (string-append (assoc-ref outputs "out")
+                               "/share/xdg-desktop-portal/portals/wlr.portal")))
+                  (substitute* portal
+                    (("UseIn=(.*)" all desktops)
+                     (string-append all ";mango"))))))))))))
 
 (define desktop-shepherd-conf
   (scheme-file "desktop-shepherd.scm"
@@ -144,6 +167,46 @@
                                                      #:respawn-delay 1
                                                      #:respawn-limit '(5 . 30))
 
+                                            (service '(xdg-desktop-portal-wlr)
+                                                     #:requirement '(xdg-desktop-portal-wlr-patch)
+                                                     #:start (make-forkexec-constructor
+                                                              (list #$(file-append
+                                                                       xdg-desktop-portal-wlr
+                                                                       "/libexec/xdg-desktop-portal-wlr"))
+                                                              #:log-file (log-file
+                                                                          "xdg-desktop-portal-wlr"))
+                                                     #:stop (make-kill-destructor)
+                                                     #:respawn? #t
+                                                     #:respawn-delay 1
+                                                     #:respawn-limit '(5 . 30)
+                                                     #:requirement '(pipewire))
+
+                                            ;; workaround fix for screencapture
+                                            (service '(xdg-desktop-portal)
+                                                     #:start (make-forkexec-constructor
+                                                              (list #$(file-append
+                                                                       bash
+                                                                       "/bin/bash")
+                                                                    "-c"
+                                                                    (string-append
+                                                                     "sleep 1; "
+                                                                     "pkill -f '^"
+                                                                     #$(file-append
+                                                                        xdg-desktop-portal
+                                                                        "/libexec/xdg-desktop-portal")
+                                                                     "$' 2>/dev/null; "
+                                                                     "exec "
+                                                                     #$(file-append
+                                                                        xdg-desktop-portal
+                                                                        "/libexec/xdg-desktop-portal")))
+                                                              #:log-file (log-file
+                                                                          "xdg-desktop-portal"))
+                                                     #:stop (make-kill-destructor)
+                                                     #:respawn? #t
+                                                     #:respawn-delay 1
+                                                     #:respawn-limit '(5 . 30)
+                                                     #:requirement '(xdg-desktop-portal-wlr))
+
                                             (service '(noctalia)
                                                      #:start (make-forkexec-constructor
                                                               (list #$(file-append
@@ -160,10 +223,13 @@
                                                                      wireplumber
                                                                      pipewire-pulse))))
 
-                   (start-in-the-background '(ssh-agent foot-server pipewire
-                                                        wireplumber
-                                                        pipewire-pulse
-                                                        noctalia)))))
+                   (start-in-the-background '(ssh-agent foot-server
+                                              pipewire
+                                              wireplumber
+                                              pipewire-pulse
+                                              xdg-desktop-portal-wlr
+                                              xdg-desktop-portal
+                                              noctalia)))))
 
 (define desktop-shepherd
   (program-file "desktop-shepherd"
@@ -389,10 +455,14 @@
 
     ;; Desktop apps
     "loupe"
-    "showtime"
+    "vlc"
     "snapshot"
     "decibels"
     "gnome-calculator"
+    "obs-nvidia"
+    "obs-wlrobs"
+    "v4l-utils"
+    "fuzzel"
 
     ;; Gaming
     "mangohud"
@@ -466,6 +536,12 @@
                          (nftables-configuration (ruleset firewall-rules)))
 
                 (service ntp-service-type)
+
+                (service kernel-module-loader-service-type
+                         '("v4l2loopback"))
+
+                (simple-service 'obs-virtual-camera-config etc-service-type
+                                (list `("modprobe.d/v4l2loopback.conf" ,obs-virtual-camera-conf)))
 
                 ;; Sound
                 (service rtkit-service-type)
@@ -544,6 +620,7 @@
                     ;; The list of user accounts ('root' is implicit).
                     (users (cons* user-jian %base-user-accounts))
                     (kernel linux)
+                    (kernel-loadable-modules (list v4l2loopback-linux-module))
                     (firmware (cons* linux-firmware %base-firmware))
                     (packages (append (list mangowm-patch thunar-patch)
                                       (specifications->packages packages-list)
