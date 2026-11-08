@@ -108,6 +108,9 @@ format = "{:%I:%M %p}"
 list_mode = true
 panel_position = "center"
 
+[plugin_settings."rylos/tailnet"]
+panel_open_near_click = false
+
 [plugins]
 enabled = [ "noctalia/wallpaper_depth", "ezequiel/mango_layouts", "kenn/keybind-cheatsheet", "gambled23/mangowm-keymode", "rylos/tailnet" ]
 
