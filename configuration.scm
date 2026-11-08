@@ -17,6 +17,7 @@
              (gnu services containers)
              (gnu services networking)
              (gnu packages password-utils)
+             (gnu services virtualization)
              (nonguix)
              (nongnu packages nvidia)
              (nonguix transformations)
