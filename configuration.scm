@@ -319,8 +319,14 @@
     "wireplumber"
     "playerctl"
 
-    ;; Containers
+    ;; Containers & Virtualization
     "podman"
+    "distrobox"
+    "qemu"
+    "libvirt"
+    "virt-manager"
+    "virt-viewer"
+    "dnsmasq"
 
     ;; Python and machine learning
     "python"
@@ -377,7 +383,14 @@
 
     ;; Editors
     "neovim"
-    "emacs"))
+    "emacs"
+
+    ;; Desktop apps
+    "loupe"
+    "showtime"
+    "snapshot"
+    "decibels"
+    "gnome-calculator"))
 
 (define user-jian
   (user-account
@@ -385,7 +398,7 @@
     (comment "Jian Zcar")
     (group "users")
     (home-directory "/home/jian")
-    (supplementary-groups '("wheel" "netdev" "audio" "video"))))
+    (supplementary-groups '("wheel" "netdev" "audio" "video" "kvm" "libvirt"))))
 
 (define podman-subids
   (map (lambda (user)
@@ -452,6 +465,10 @@
                 (service rootless-podman-service-type
                          (rootless-podman-configuration (subuids podman-subids)
                                                         (subgids podman-subids)))
+                (service libvirt-service-type
+                         (libvirt-configuration (unix-sock-group "libvirt")))
+
+                (service virtlog-service-type)
 
                 (service noctalia-greeter-service-type
                          (noctalia-greeter-configuration (cursor (noctalia-greeter-cursor-configuration
