@@ -114,6 +114,11 @@ panel_open_near_click = false
 [plugins]
 enabled = [ "noctalia/wallpaper_depth", "ezequiel/mango_layouts", "kenn/keybind-cheatsheet", "gambled23/mangowm-keymode", "rylos/tailnet" ]
 
+[widget.tray]
+colorize_icons = true
+drawer = true
+icon_type = "symbolic"
+
 [widget.layout]
 show_text = true
 type = "ezequiel/mango_layouts:btn"
