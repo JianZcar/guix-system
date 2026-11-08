@@ -322,6 +322,7 @@
 
     ;; Containers & Virtualization
     "podman"
+    "podman-compose"
     "distrobox"
     "qemu"
     "libvirt"
@@ -391,7 +392,15 @@
     "showtime"
     "snapshot"
     "decibels"
-    "gnome-calculator"))
+    "gnome-calculator"
+
+    ;; Gaming
+    "mangohud"
+    "gamemode"
+    "cartridges"
+    "steam-nvidia"
+    "heroic-nvidia"
+    "protonup"))
 
 (define user-jian
   (user-account
@@ -437,7 +446,7 @@
                 (service polkit-service-type
                          (polkit-configuration (actions (list
                                                          networkmanager-polkit-rules
-                                                         keepassxc))))
+                                                         keepassxc gamemode))))
                 (service elogind-service-type)
 
                 (service upower-service-type)
