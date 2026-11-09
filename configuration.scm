@@ -181,7 +181,7 @@
                                                      #:respawn-limit '(5 . 30))
 
                                             ;; workaround fix for screencapture
-                                            (service '(xdg-desktop-portal)
+                                            (service '(restart-xdg-desktop-portal)
                                                      #:requirement '(xdg-desktop-portal-wlr)
                                                      #:start (make-forkexec-constructor
                                                               (list #$(file-append
@@ -194,17 +194,10 @@
                                                                      #$(file-append
                                                                         xdg-desktop-portal
                                                                         "/libexec/xdg-desktop-portal")
-                                                                     "$' 2>/dev/null; "
-                                                                     "exec "
-                                                                     #$(file-append
-                                                                        xdg-desktop-portal
-                                                                        "/libexec/xdg-desktop-portal")))
-                                                              #:log-file (log-file
-                                                                          "xdg-desktop-portal"))
+                                                                     "$' 2>/dev/null")))
                                                      #:stop (make-kill-destructor)
-                                                     #:respawn? #t
-                                                     #:respawn-delay 1
-                                                     #:respawn-limit '(5 . 30))
+                                                     #:one-shot? #t
+                                                     #:respawn? #f)
 
                                             (service '(noctalia)
                                                      #:requirement '(pipewire
@@ -227,7 +220,7 @@
                                               wireplumber
                                               pipewire-pulse
                                               xdg-desktop-portal-wlr
-                                              xdg-desktop-portal
+                                              restart-xdg-desktop-portal
                                               noctalia)))))
 
 (define desktop-shepherd
