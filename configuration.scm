@@ -632,7 +632,7 @@
                                   (keyboard-layout keyboard-layout)))
                     (mapped-devices (list (mapped-device
                                             (source (uuid
-                                                     "b4a9f8bc-2b2e-46ac-a8ff-0c50cb88efe3"))
+                                                     "324ed28c-917e-4e21-9f01-ee863599bd13"))
                                             (target "cryptroot")
                                             (type luks-device-mapping))))
 
@@ -649,6 +649,6 @@
                                            (dependencies mapped-devices))
                                          (file-system
                                            (mount-point "/boot/efi")
-                                           (device (uuid "2AA5-39A9"
+                                           (device (uuid "A604-A46D"
                                                          'fat32))
                                            (type "vfat")) %base-file-systems))))
