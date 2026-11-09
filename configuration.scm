@@ -454,6 +454,7 @@
     "snapshot"
     "decibels"
     "gnome-calculator"
+    "ungoogled-chromium"
     "obs-nvidia"
     "obs-wlrobs"
     "v4l-utils"

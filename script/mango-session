@@ -9,8 +9,18 @@ cat > "$dir/xterm" <<'EOF'
 exec footclient "$@"
 EOF
 
+runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+shepherd_pidfile="$runtime/desktop-shepherd.pid"
+shepherd_socket="$runtime/desktop-shepherd.socket"
+
+cat > "$dir/desktop-herd" <<EOF
+#!/usr/bin/env bash
+exec herd -s "$shepherd_socket" "\$@"
+EOF
+
 chmod 700 "$dir"
 chmod 700 "$dir/xterm"
+chmod 700 "$dir/desktop-herd"
 
 export PATH="$PATH:$dir"
 export XDG_DATA_DIRS="${XDG_DATA_DIRS:+$XDG_DATA_DIRS:}${HOME}/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share"
@@ -45,10 +55,6 @@ ln -s /etc/xdg/mango/config.conf \
 
 ln -s /etc/xdg/foot/foot.ini \
   "$HOME/.config/foot/foot.ini" >/dev/null 2>&1
-
-runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-shepherd_pidfile="$runtime/desktop-shepherd.pid"
-shepherd_socket="$runtime/desktop-shepherd.socket"
 
 mkdir -p "$HOME/.cache/mango"
 
