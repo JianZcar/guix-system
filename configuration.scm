@@ -26,7 +26,7 @@
              (midnight services noctalia-greeter))
 
 (define system-hostname
-  "rena")
+  "zena")
 
 (define nonguix-signing-key
   (plain-file "nonguix.pub"
@@ -168,7 +168,7 @@
                                                      #:respawn-limit '(5 . 30))
 
                                             (service '(xdg-desktop-portal-wlr)
-                                                     #:requirement '(xdg-desktop-portal-wlr-patch)
+                                                     #:requirement '(pipewire)
                                                      #:start (make-forkexec-constructor
                                                               (list #$(file-append
                                                                        xdg-desktop-portal-wlr
@@ -178,11 +178,11 @@
                                                      #:stop (make-kill-destructor)
                                                      #:respawn? #t
                                                      #:respawn-delay 1
-                                                     #:respawn-limit '(5 . 30)
-                                                     #:requirement '(pipewire))
+                                                     #:respawn-limit '(5 . 30))
 
                                             ;; workaround fix for screencapture
                                             (service '(xdg-desktop-portal)
+                                                     #:requirement '(xdg-desktop-portal-wlr)
                                                      #:start (make-forkexec-constructor
                                                               (list #$(file-append
                                                                        bash
@@ -204,10 +204,12 @@
                                                      #:stop (make-kill-destructor)
                                                      #:respawn? #t
                                                      #:respawn-delay 1
-                                                     #:respawn-limit '(5 . 30)
-                                                     #:requirement '(xdg-desktop-portal-wlr))
+                                                     #:respawn-limit '(5 . 30))
 
                                             (service '(noctalia)
+                                                     #:requirement '(pipewire
+                                                                     wireplumber
+                                                                     pipewire-pulse)
                                                      #:start (make-forkexec-constructor
                                                               (list #$(file-append
                                                                        (@ (noctalia)
@@ -218,10 +220,7 @@
                                                      #:stop (make-kill-destructor)
                                                      #:respawn? #t
                                                      #:respawn-delay 1
-                                                     #:respawn-limit '(5 . 30)
-                                                     #:requirement '(pipewire
-                                                                     wireplumber
-                                                                     pipewire-pulse))))
+                                                     #:respawn-limit '(5 . 30))))
 
                    (start-in-the-background '(ssh-agent foot-server
                                               pipewire
@@ -403,6 +402,9 @@
     "onnxruntime:python"
 
     ;; Desktop integration
+    "gtk+"
+    "gtk"
+    "gsettings-desktop-schemas"
     "xdg-utils"
     "xdg-user-dirs"
     "xdg-desktop-portal"
