@@ -38,6 +38,80 @@
                                  #:kernel-mode-setting? #t
                                  #:dynamic-boost? #t))
 
+;; Compatibility for using nvidia inside distrobox
+;; Mount volume /gnu:/gnu:ro for it to work
+(define nvidia-compatibility
+  #~(begin
+      (use-modules (guix build utils)
+                   (ice-9 ftw)
+                   (ice-9 exceptions)
+                   (srfi srfi-13))
+
+      (let* ((driver #$nvda-595)
+             (driver-libdir (string-append driver "/lib"))
+             (driver-share (string-append driver "/share"))
+
+             (egl-dir "/usr/share/glvnd/egl_vendor.d")
+             (egl-platform-dir "/usr/share/egl/egl_external_platform.d")
+             (vulkan-dir "/usr/share/vulkan/icd.d")
+             (vulkan-layer-dir "/usr/share/vulkan/implicit_layer.d"))
+        
+        ;; Replace existing files and symlinks safely.
+        (define (install-link source target)
+          (unless (file-exists? source)
+            (error "Source file does not exist" source))
+
+          (let ((existing (false-if-exception (lstat target))))
+            (when existing
+              (when (eq? 'directory
+                         (stat:type existing))
+                (error "Refusing to overwrite directory" target))
+              (delete-file target)))
+
+          (symlink source target))
+
+        ;; Create destination directories.
+        (for-each mkdir-p
+                  (list "/usr/lib64" egl-dir egl-platform-dir vulkan-dir
+                        vulkan-layer-dir))
+
+        ;; NVIDIA shared libraries.
+        ;; Absolute source paths resolve through /gnu/store.
+        (for-each (lambda (name)
+                    (install-link (string-append driver-libdir "/" name)
+                                  (string-append "/usr/lib64/" name)))
+                  (scandir driver-libdir
+                           (lambda (name)
+                             (string-contains name ".so"))))
+
+        ;; EGL vendor configuration.
+        (install-link (string-append driver-share
+                       "/glvnd/egl_vendor.d/10_nvidia.x86_64.json")
+                      (string-append egl-dir "/10_nvidia.x86_64.json"))
+
+        ;; EGL external platform configuration.
+        (let ((source-dir (string-append driver-share
+                                         "/egl/egl_external_platform.d")))
+          
+          (when (file-exists? source-dir)
+            (for-each (lambda (name)
+                        (install-link (string-append source-dir "/" name)
+                                      (string-append egl-platform-dir "/" name)))
+                      (scandir source-dir
+                               (lambda (name)
+                                 (string-suffix? ".json" name))))))
+
+        ;; Vulkan ICD.
+        (install-link (string-append driver-share
+                                     "/vulkan/icd.d/nvidia_icd.x86_64.json")
+                      (string-append vulkan-dir "/nvidia_icd.x86_64.json"))
+
+        ;; Vulkan implicit layer.
+        (install-link (string-append driver-share
+                       "/vulkan/implicit_layer.d/nvidia_layers.x86_64.json")
+                      (string-append vulkan-layer-dir
+                                     "/nvidia_layers.x86_64.json")))))
+
 ; fix for no generated resolv.conf
 ; sudo rm /etc/resolv.conf
 ; sudo nmcli general reload dns-rc
@@ -497,8 +571,11 @@
                                                 (authorized-keys (list
                                                                   nonguix-signing-key))))
 
+                (simple-service 'nvidia-compatibility activation-service-type
+                                nvidia-compatibility)
+
                 (service zram-device-service-type
-                         (zram-device-configuration (size "6G")
+                         (zram-device-configuration (size "64G")
                                                     (compression-algorithm 'zstd)
                                                     (priority 100)))
 
