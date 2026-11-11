@@ -1,28 +1,14 @@
 #!/bin/bash
 set -u
 
-dir=$(mktemp -d /tmp/XXXXXX) || exit 1
-trap 'rm -rf "$dir"' EXIT
+cleanup() {
+  desktop-herd stop shepherd || return
+}
 
-cat > "$dir/xterm" <<'EOF'
-#!/usr/bin/env bash
-exec footclient "$@"
-EOF
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-shepherd_pidfile="$runtime/desktop-shepherd.pid"
-shepherd_socket="$runtime/desktop-shepherd.socket"
-
-cat > "$dir/desktop-herd" <<EOF
-#!/usr/bin/env bash
-exec herd -s "$shepherd_socket" "\$@"
-EOF
-
-chmod 700 "$dir"
-chmod 700 "$dir/xterm"
-chmod 700 "$dir/desktop-herd"
-
-export PATH="$PATH:$dir"
 export XDG_DATA_DIRS="${XDG_DATA_DIRS:+$XDG_DATA_DIRS:}${HOME}/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share"
 export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:+$XDG_CONFIG_DIRS:}/etc/xdg"
 export NOCTALIA_CONFIG_HOME="/etc/xdg"
@@ -37,8 +23,14 @@ export QT_QPA_PLATFORMTHEME=gtk3
 export SSH_AUTH_SOCK="$HOME/.ssh/agent/ssh-agent.sock"
 rm -f "$SSH_AUTH_SOCK"
 
-flatpak --user remote-add --if-not-exists \
-  flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak_init="$HOME/.local/share/flatpak/.init"
+if [[ ! -f "$flatpak_init" ]]; then
+    if flatpak --user remote-add --if-not-exists \
+        flathub https://dl.flathub.org/repo/flathub.flatpakrepo; then
+        mkdir -p "$(dirname "$flatpak_init")"
+        touch "$flatpak_init"
+    fi
+fi
 
 mkdir -p "$HOME/.ssh/agent" && \
   chmod 700 "$HOME/.ssh" && \
@@ -50,27 +42,14 @@ mkdir -p "$HOME/.config/foot/themes" && \
 mkdir -p "$HOME/.config/mango" && \
   touch "$HOME/.config/mango/noctalia.conf"
 
+mkdir -p "$HOME/.local/share" && \
+  ln -s "$HOME/.local/share/guix-sandbox-home/.local/share/Steam" \
+  "$HOME/.local/share/Steam"
+
 ln -s /etc/xdg/mango/config.conf \
   "$HOME/.config/mango/config.conf" >/dev/null 2>&1
 
 ln -s /etc/xdg/foot/foot.ini \
   "$HOME/.config/foot/foot.ini" >/dev/null 2>&1
 
-mkdir -p "$HOME/.local/share" && \
-  ln -s "$HOME/.local/share/guix-sandbox-home/.local/share/Steam" \
-  "$HOME/.local/share/Steam"
-
-mkdir -p "$HOME/.cache/mango"
-
-cleanup() {
-  herd -s "$shepherd_socket" stop shepherd || return
-
-  rm -f "$shepherd_pidfile" "$shepherd_socket"
-  rm -rf "$dir"
-}
-
-trap cleanup EXIT
-trap 'exit 130' INT
-trap 'exit 143' TERM
-
-dbus-run-session -- mango -s "dex -a" -c /etc/xdg/mango/base.conf
+dbus-run-session -- mango -c /etc/xdg/mango/base.conf

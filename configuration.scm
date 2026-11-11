@@ -20,6 +20,7 @@
              (gnu services containers)
              (gnu services networking)
              (gnu packages freedesktop)
+             (guix build-system trivial)
              (gnu packages password-utils)
              (gnu services virtualization)
              (nonguix)
@@ -264,6 +265,55 @@
                    (file-append desktop-shepherd)
                    "\n"
                    "Terminal=false\n"))
+
+(define xterm-wrapper
+  (program-file "xterm"
+                #~(apply execl
+                         #$(file-append foot "/bin/footclient") "footclient"
+                         (cdr (command-line)))))
+
+(define desktop-herd-wrapper
+  (program-file "desktop-herd"
+                #~(let* ((runtime (or (getenv "XDG_RUNTIME_DIR")
+                                      (string-append "/run/user/"
+                                                     (number->string (getuid)))))
+                         (socket (string-append runtime
+                                                "/desktop-shepherd.socket"))
+                         (herd #$(file-append shepherd "/bin/herd")))
+                    (apply execl
+                           herd
+                           "herd"
+                           "-s"
+                           socket
+                           (cdr (command-line))))))
+
+(define desktop-session-tools
+  (package
+    (name "desktop-session-tools")
+    (version "1.0")
+    (source
+     #f)
+    (build-system trivial-build-system)
+    (arguments
+     (list
+      #:modules '((guix build utils))
+      #:builder
+      #~(begin
+          (use-modules (guix build utils))
+
+          (mkdir-p (string-append #$output "/bin"))
+
+          (symlink #$xterm-wrapper
+                   (string-append #$output "/bin/xterm"))
+
+          (symlink #$desktop-herd-wrapper
+                   (string-append #$output "/bin/desktop-herd")))))
+    (inputs (list foot shepherd))
+    (synopsis "Desktop session integration utilities")
+    (description "Provides helper utilities for improved desktop experience,
+application integration, and session management.")
+    (home-page "https://github.com/JianZcar/guix-system")
+    (license #f)))
 
 (define mango-session
   (program-file "mango-session"
@@ -637,7 +687,8 @@
                     (kernel linux)
                     (kernel-loadable-modules (list v4l2loopback-linux-module))
                     (firmware (cons* linux-firmware %base-firmware))
-                    (packages (append (list mangowm-patch thunar-patch)
+                    (packages (append (list mangowm-patch thunar-patch
+                                            desktop-session-tools)
                                       (specifications->packages packages-list)
                                       %base-packages))
 
