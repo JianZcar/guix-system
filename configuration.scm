@@ -6,12 +6,15 @@
              (gnu)
              (gnu services pm)
              (gnu packages ssh)
+             (gnu packages elf)
              (gnu services dbus)
              (gnu packages bash)
              (gnu packages linux)
              (gnu services linux)
+             (gnu packages admin)
              (gnu packages gnome)
              (gnu system accounts)
+             (gnu system privilege)
              (gnu services desktop)
              (gnu packages terminals)
              (gnu services containers)
@@ -111,6 +114,27 @@
                        "/vulkan/implicit_layer.d/nvidia_layers.x86_64.json")
                       (string-append vulkan-layer-dir
                                      "/nvidia_layers.x86_64.json")))))
+
+(define btop-patch
+  (package
+    (inherit btop)
+    (name "btop-patch")
+
+    ;; patchelf is needed during the build.
+    (native-inputs (modify-inputs (package-native-inputs btop)
+                     (append patchelf)))
+
+    (arguments
+     (substitute-keyword-arguments (package-arguments btop)
+       ((#:phases phases
+         #~%standard-phases)
+        #~(modify-phases #$phases
+            (add-after 'install 'add-nvidia-runpath
+              (lambda* (#:key outputs #:allow-other-keys)
+                (let ((binary (string-append (assoc-ref outputs "out")
+                                             "/bin/btop")))
+                  (invoke "patchelf" "--add-rpath"
+                          (string-append #$nvda-595 "/lib") binary))))))))))
 
 ; fix for no generated resolv.conf
 ; sudo rm /etc/resolv.conf
@@ -418,7 +442,6 @@
   '( ;System utilities
      "acpi"
     "bash"
-    "btop"
     "curl"
     "dbus"
     "glib:bin"
@@ -698,6 +721,14 @@
                     (packages (append (list mangowm-patch thunar-patch)
                                       (specifications->packages packages-list)
                                       %base-packages))
+
+                    (privileged-programs (cons (privileged-program
+                                                 (program (file-append
+                                                           btop-patch
+                                                           "/bin/btop"))
+                                                 (capabilities
+                                                  "cap_perfmon=ep"))
+                                               %default-privileged-programs))
 
                     ;; Below is the list of system services.  To search for available
                     ;; services, run 'guix system search KEYWORD' in a terminal.
