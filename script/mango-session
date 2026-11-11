@@ -56,6 +56,10 @@ ln -s /etc/xdg/mango/config.conf \
 ln -s /etc/xdg/foot/foot.ini \
   "$HOME/.config/foot/foot.ini" >/dev/null 2>&1
 
+mkdir -p "$HOME/.local/share" && \
+  ln -s "$HOME/.local/share/guix-sandbox-home/.local/share/Steam" \
+  "$HOME/.local/share/Steam"
+
 mkdir -p "$HOME/.cache/mango"
 
 cleanup() {
