@@ -2,7 +2,7 @@
 set -e
 
 if [ "$#" -eq 0 ]; then
-    echo "Usage: $0 EXECUTABLE [ARGUMENTS...]"
+    echo "Usage: $(basename "$0") EXECUTABLE [ARGUMENTS...]"
     exit 1
 fi
 
@@ -19,6 +19,7 @@ packages=(
   coreutils
   glibc
   gcc-toolchain
+  mono
 
   # Utilities
   findutils
