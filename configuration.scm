@@ -272,7 +272,7 @@
                          #$(file-append foot "/bin/footclient") "footclient"
                          (cdr (command-line)))))
 
-(define desktop-herd-wrapper
+(define desktop-herd
   (program-file "desktop-herd"
                 #~(let* ((runtime (or (getenv "XDG_RUNTIME_DIR")
                                       (string-append "/run/user/"
@@ -286,6 +286,28 @@
                            "-s"
                            socket
                            (cdr (command-line))))))
+
+(define nv-script
+  (local-file "./script/nv"))
+
+(define nv
+  (program-file "nv"
+                #~(let ((status (apply system*
+                                       #$(file-append bash "/bin/bash")
+                                       #$nv-script
+                                       (cdr (command-line)))))
+                    (primitive-exit status))))
+
+(define game-run-script
+  (local-file "./script/game-run"))
+
+(define game-run
+  (program-file "game-run"
+                #~(let ((status (apply system*
+                                       #$(file-append bash "/bin/bash")
+                                       #$game-run-script
+                                       (cdr (command-line)))))
+                    (primitive-exit status))))
 
 (define desktop-session-tools
   (package
@@ -306,8 +328,15 @@
           (symlink #$xterm-wrapper
                    (string-append #$output "/bin/xterm"))
 
-          (symlink #$desktop-herd-wrapper
-                   (string-append #$output "/bin/desktop-herd")))))
+          (symlink #$desktop-herd
+                   (string-append #$output "/bin/desktop-herd"))
+
+          (symlink #$nv
+                   (string-append #$output "/bin/nv"))
+
+          (symlink #$game-run
+                   (string-append #$output "/bin/game-run")))))
+
     (inputs (list foot shepherd))
     (synopsis "Desktop session integration utilities")
     (description "Provides helper utilities for improved desktop experience,

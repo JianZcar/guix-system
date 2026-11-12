@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -e
+
+if [ "$#" -eq 0 ]; then
+    echo "Usage: $0 EXECUTABLE [ARGUMENTS...]"
+    exit 1
+fi
+
+exe="$(realpath "$1")"
+shift
+
+game_dir="$(dirname "$exe")"
+home="$game_dir/guix-sandbox-home"
+
+mkdir -p "$home"
+
+packages=(
+  bash
+  coreutils
+  glibc
+  gcc-toolchain
+
+  # Utilities
+  findutils
+  grep
+  sed
+  gawk
+  file
+  which
+  util-linux
+  procps
+
+  # Graphics
+  nvda
+  mesa-utils
+  vulkan-tools
+
+  # Audio
+  pipewire
+  pulseaudio
+  alsa-lib
+  alsa-plugins
+)
+
+guix shell \
+  --container \
+  --no-cwd \
+  --network \
+  --emulate-fhs \
+  -E "HOME=$home" \
+  --share="$game_dir" \
+  --expose=/dev/nvidia0 \
+  --expose=/dev/nvidiactl \
+  --expose=/dev/nvidia-modeset \
+  --expose=/dev/nvidia-uvm \
+  --expose=/dev/dri \
+  --expose=/dev/snd \
+  --expose=/sys \
+  --expose="$XDG_RUNTIME_DIR" \
+  --expose=/tmp/.X11-unix \
+  --preserve='^WAYLAND_DISPLAY$' \
+  --preserve='^XDG_RUNTIME_DIR$' \
+  --preserve='^DISPLAY$' \
+  --preserve='^XDG_SESSION_TYPE$' \
+  --preserve='^DBUS_SESSION_BUS_ADDRESS$' \
+  --preserve='^PULSE_SERVER$' \
+  --preserve='^PIPEWIRE_REMOTE$' \
+  --preserve='^XAUTHORITY$' \
+  --preserve='^__GLX_VENDOR_LIBRARY_NAME$' \
+  --preserve='^__NV_PRIME_RENDER_OFFLOAD$' \
+  "${packages[@]}" \
+  --with-graft=mesa=nvda \
+  -- "$exe" "$@"
