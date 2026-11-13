@@ -9,12 +9,9 @@
   #:use-module (gnu packages linux)
   #:use-module (gnu packages ssh)
   #:use-module (gnu packages terminals)
-  #:export (mango-session
-            mangowm-patch
-            desktop-shepherd
-            desktop-shepherd-autostart
-            desktop-session-tools
-            xdg-desktop-portal-wlr-patch))
+  #:export (mango-session mangowm-patch desktop-shepherd
+                          desktop-shepherd-autostart desktop-session-tools
+                          xdg-desktop-portal-wlr-patch))
 
 (define mango-session-script
   (local-file "../scripts/mango-session"))
@@ -304,7 +301,7 @@ application integration, and session management.")
             (add-after 'install 'patch-mango-desktop
               (lambda* (#:key outputs #:allow-other-keys)
                 (let ((desktop (string-append (assoc-ref outputs "out")
-                                 "/share/wayland-sessions/mango.desktop")))
+                                "/share/wayland-sessions/mango.desktop")))
                   (when (file-exists? desktop)
                     (substitute* desktop
                       (("Exec=mango")

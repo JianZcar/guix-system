@@ -1,7 +1,6 @@
 (define-module (modules users)
   #:use-module (gnu system accounts)
-  #:export (user-jian
-            podman-subids))
+  #:export (user-jian podman-subids))
 
 (define user-jian
   (user-account

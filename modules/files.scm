@@ -2,19 +2,18 @@
   #:use-module (guix gexp)
   #:use-module (gnu packages linux)
   #:use-module (gnu packages gnome)
-  #:export (networkmanager-polkit-rules
-            asound-conf
-            obs-virtual-camera-conf
-            greeter-conf
-            mango-base-config
-            mango-config
-            noctalia-config
-            foot-config
-            dconf-profile
-            theme
-            dconf-local-db
-            thunar-config
-            firewall-rules))
+  #:export (networkmanager-polkit-rules asound-conf
+                                        obs-virtual-camera-conf
+                                        greeter-conf
+                                        mango-base-config
+                                        mango-config
+                                        noctalia-config
+                                        foot-config
+                                        dconf-profile
+                                        theme
+                                        dconf-local-db
+                                        thunar-config
+                                        firewall-rules))
 
 ; fix for no generated resolv.conf
 ; sudo rm /etc/resolv.conf

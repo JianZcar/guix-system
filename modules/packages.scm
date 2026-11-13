@@ -5,9 +5,7 @@
   #:use-module (gnu packages admin)
   #:use-module (gnu packages elf)
   #:use-module (nongnu packages nvidia)
-  #:export (thunar-patch
-            btop-patch
-            packages-list))
+  #:export (thunar-patch btop-patch packages-list))
 
 (define thunar-patch
   (package
@@ -49,13 +47,18 @@
 (define packages-list
   '( ;System utilities
      "acpi"
+    "coreutils"
     "bash"
     "curl"
     "dbus"
     "glib:bin"
     "jq"
+    "fzf"
+    "libcap"
     "ncurses"
+    "btop"
     "btrfs-progs"
+    "unzip"
     "cryptsetup"
     "libsecret"
     "keepassxc"
@@ -150,7 +153,6 @@
 
     ;; Editors
     "neovim"
-    "emacs"
 
     ;; Desktop apps
     "loupe"

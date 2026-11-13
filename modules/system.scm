@@ -2,9 +2,7 @@
   #:use-module (guix gexp)
   #:use-module (nonguix transformations)
   #:use-module (nongnu packages nvidia)
-  #:export (system-hostname
-            nonguix-signing-key
-            nvidia-transform))
+  #:export (system-hostname nonguix-signing-key nvidia-transform))
 
 (define system-hostname
   "zena")
