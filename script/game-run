@@ -2,7 +2,7 @@
 set -e
 
 if [ "$#" -eq 0 ]; then
-    echo "Usage: $(basename "$0") EXECUTABLE [ARGUMENTS...]"
+    echo "Usage: game-run EXECUTABLE [ARGUMENTS...]"
     exit 1
 fi
 
