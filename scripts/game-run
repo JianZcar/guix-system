@@ -45,7 +45,7 @@ guix shell \
   --expose=/sys \
   --expose="$XDG_RUNTIME_DIR" \
   --expose=/tmp/.X11-unix \
-  --preserve='^HOME$'
+  --preserve='^HOME$' \
   --preserve='^WAYLAND_DISPLAY$' \
   --preserve='^XDG_RUNTIME_DIR$' \
   --preserve='^DISPLAY$' \
