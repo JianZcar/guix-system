@@ -35,13 +35,13 @@
   #:export (services-list))
 
 (define services-list
-  (append (list ;Use substitutes from Nonguix.
+  (append (list ;use substitutes from nonguix.
                 (simple-service 'substitute-servers guix-service-type
                                 (guix-extension (substitute-urls (list
                                                                   "https://substitutes.nonguix.org"))
                                                 (authorized-keys (list
                                                                   nonguix-signing-key))))
-                ;; Use substitutes from Guix Moe
+                ;; use substitutes from guix moe
                 (simple-service 'guix-moe guix-service-type
                                 (guix-extension (substitute-urls '("https://cache-cdn.guix.moe"))
                                                 (authorized-keys (list
@@ -50,7 +50,7 @@
                 (service thermald-service-type)
 
                 (service zram-device-service-type
-                         (zram-device-configuration (size "64G")
+                         (zram-device-configuration (size "64g")
                                                     (compression-algorithm 'lz4)
                                                     (priority 100)))
 
@@ -64,7 +64,7 @@
                          (earlyoom-configuration (minimum-available-memory 10)
                                                  (minimum-free-swap 10)
                                                  (avoid-regexp
-                                                  "mango|pipewire|wireplumber|noctalia|dbus-daemon|elogind|shepherd|Xwayland")))
+                                                  "mango|pipewire|wireplumber|noctalia|dbus-daemon|elogind|shepherd|xwayland")))
 
                 (service fstrim-service-type)
                 (service polkit-service-type
@@ -81,7 +81,7 @@
                 (service bluetooth-service-type
                          (bluetooth-configuration (name system-hostname)))
 
-                ;; Networking
+                ;; networking
                 (service wpa-supplicant-service-type)
                 (service network-manager-service-type)
                 (service tailscale-service-type)
@@ -97,7 +97,7 @@
                 (simple-service 'obs-virtual-camera-config etc-service-type
                                 (list `("modprobe.d/v4l2loopback.conf" ,obs-virtual-camera-conf)))
 
-                ;; Sound
+                ;; sound
                 (service rtkit-service-type)
                 (simple-service 'asound-conf etc-service-type
                                 (list `("asound.conf" ,asound-conf)))
@@ -110,10 +110,14 @@
 
                 (service virtlog-service-type)
 
+                (udev-rules-service 'steam-input
+                                    (udev-rule "60-steam-input.rules"
+                                     "KERNEL==\"uinput\", SUBSYSTEM==\"misc\", GROUP=\"input\", MODE=\"0660\", OPTIONS+=\"static_node=uinput\""))
+
                 (service noctalia-greeter-service-type
                          (noctalia-greeter-configuration (cursor (noctalia-greeter-cursor-configuration
                                                                   (theme
-                                                                   "Adwaita")
+                                                                   "adwaita")
 
                                                                   (size 24)))
                                                          (config-file (list
@@ -160,7 +164,7 @@
                 (simple-service 'thunar-config etc-service-type
                                 (list `("xdg/xfce4/xfconf/xfce-perchannel-xml/thunar.xml" ,thunar-config))))
 
-          ;; This is the default list of services we
+          ;; this is the default list of services we
           ;; are appending to.
           (modify-services %base-services
             (delete mingetty-service-type))))

@@ -156,7 +156,31 @@
                                                      #:stop (make-kill-destructor)
                                                      #:respawn? #t
                                                      #:respawn-delay 1
-                                                     #:respawn-limit '(5 . 30))))
+                                                     #:respawn-limit '(5 . 30))
+
+                                            (service '(desktop-login-sound)
+                                                     #:requirement '(pipewire
+                                                                     wireplumber
+                                                                     pipewire-pulse)
+                                                     #:start (make-forkexec-constructor
+                                                              (list #$(file-append
+                                                                       (@ (gnu
+                                                                           packages
+                                                                           libcanberra)
+                                                                        libcanberra)
+                                                                       "/bin/canberra-gtk-play")
+                                                               "-f"
+                                                               #$(file-append
+                                                                  (@ (gnu
+                                                                      packages
+                                                                      gnome-xyz)
+                                                                     yaru-theme)
+                                                                  "/share/sounds/Yaru/stereo/desktop-login.oga"))
+                                                               #:log-file (log-file
+                                                                          "desktop-login-sound"))
+                                                      #:stop (make-kill-destructor)
+                                                      #:one-shot? #t
+                                                      #:respawn? #f)))
 
                    (start-in-the-background '(ssh-agent foot-server
                                               pipewire
@@ -164,7 +188,8 @@
                                               pipewire-pulse
                                               xdg-desktop-portal-wlr
                                               restart-xdg-desktop-portal
-                                              noctalia)))))
+                                              noctalia
+                                              desktop-login-sound)))))
 
 (define desktop-shepherd
   (program-file "desktop-shepherd"

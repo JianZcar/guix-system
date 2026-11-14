@@ -8,7 +8,12 @@
     (comment "Jian Zcar")
     (group "users")
     (home-directory "/home/jian")
-    (supplementary-groups '("wheel" "netdev" "audio" "video" "kvm" "libvirt"))))
+    (supplementary-groups '("wheel" "netdev"
+                            "input"
+                            "audio"
+                            "video"
+                            "kvm"
+                            "libvirt"))))
 
 (define podman-subids
   (map (lambda (user)

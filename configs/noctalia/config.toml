@@ -129,6 +129,3 @@ type = "noctalia/wallpaper_depth:bar"
 
 [widget.tailnet]
 type = "rylos/tailnet:bar"
-
-[hooks]
-started = "canberra-gtk-play -i desktop-login"
