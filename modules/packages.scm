@@ -74,6 +74,8 @@
     "ncurses"
     "btrfs-progs"
     "unzip"
+    "unrar"
+    "7zip"
     "cryptsetup"
     "libsecret"
     "keepassxc"

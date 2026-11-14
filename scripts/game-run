@@ -1,19 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-if [ "$#" -eq 0 ]; then
-    echo "Usage: game-run EXECUTABLE [ARGUMENTS...]"
-    exit 1
-fi
-
-exe="$(realpath "$1")"
-shift
-
-game_dir="$(dirname "$exe")"
-home="$game_dir/guix-sandbox-home"
-
-mkdir -p "$home"
-
 packages=(
   bash
   coreutils
@@ -48,8 +35,7 @@ guix shell \
   --no-cwd \
   --network \
   --emulate-fhs \
-  -E "HOME=$home" \
-  --share="$game_dir" \
+  --share="$HOME" \
   --expose=/dev/nvidia0 \
   --expose=/dev/nvidiactl \
   --expose=/dev/nvidia-modeset \
@@ -59,6 +45,7 @@ guix shell \
   --expose=/sys \
   --expose="$XDG_RUNTIME_DIR" \
   --expose=/tmp/.X11-unix \
+  --preserve='^HOME$'
   --preserve='^WAYLAND_DISPLAY$' \
   --preserve='^XDG_RUNTIME_DIR$' \
   --preserve='^DISPLAY$' \
@@ -71,4 +58,4 @@ guix shell \
   --preserve='^__NV_PRIME_RENDER_OFFLOAD$' \
   "${packages[@]}" \
   --with-graft=mesa=nvda \
-  -- "$exe" "$@"
+  -- "$@"

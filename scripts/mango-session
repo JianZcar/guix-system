@@ -13,6 +13,8 @@ export XDG_DATA_DIRS="${XDG_DATA_DIRS:+$XDG_DATA_DIRS:}${HOME}/.local/share/flat
 export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:+$XDG_CONFIG_DIRS:}/etc/xdg"
 export NOCTALIA_CONFIG_HOME="/etc/xdg"
 
+export GUIX_SANDBOX_HOME="$HOME"
+
 export XDG_CURRENT_DESKTOP=mango
 export XDG_SESSION_TYPE=wayland
 export XDG_SESSION_DESKTOP=mango
@@ -41,10 +43,6 @@ mkdir -p "$HOME/.config/foot/themes" && \
 
 mkdir -p "$HOME/.config/mango" && \
   touch "$HOME/.config/mango/noctalia.conf"
-
-mkdir -p "$HOME/.local/share" && \
-  ln -s "$HOME/.local/share/guix-sandbox-home/.local/share/Steam" \
-  "$HOME/.local/share/Steam"
 
 ln -s /etc/xdg/mango/config.conf \
   "$HOME/.config/mango/config.conf" >/dev/null 2>&1
