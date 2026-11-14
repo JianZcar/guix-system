@@ -26,7 +26,7 @@
                     (kernel-loadable-modules (list v4l2loopback-linux-module))
                     (firmware (cons* linux-firmware %base-firmware))
                     (packages (append (list mangowm-patch thunar-patch
-                                            desktop-session-tools)
+                                            btop-patch desktop-session-tools)
                                       (specifications->packages packages-list)
                                       %base-packages))
 
@@ -62,7 +62,7 @@
                                            (type "btrfs")
                                            (flags '(no-atime))
                                            (options
-                                            "compress=zstd:3,space_cache=v2")
+                                            "compress=zstd:3,space_cache=v2,commit=120")
                                            (dependencies mapped-devices))
                                           (file-system
                                             (mount-point "/boot/efi")

@@ -20,6 +20,7 @@
   #:use-module (gnu packages linux)
   #:use-module (gnu packages admin)
   #:use-module (gnu packages gnome)
+  #:use-module (gnu services sysctl)
   #:use-module (gnu packages terminals)
   #:use-module (gnu packages freedesktop)
   #:use-module (gnu packages password-utils)
@@ -46,16 +47,24 @@
                                                 (authorized-keys (list
                                                                   nonguix-signing-key))))
 
+                (service thermald-service-type)
+
                 (service zram-device-service-type
                          (zram-device-configuration (size "64G")
                                                     (compression-algorithm 'lz4)
                                                     (priority 100)))
 
+                (simple-service 'zram-sysctl sysctl-service-type
+                                '(("vm.swappiness" . "180")
+                                  ("vm.watermark_boost_factor" . "0")
+                                  ("vm.watermark_scale_factor" . "125")
+                                  ("vm.page-cluster" . "0")))
+
                 (service earlyoom-service-type
                          (earlyoom-configuration (minimum-available-memory 10)
                                                  (minimum-free-swap 10)
                                                  (avoid-regexp
-                                                  "mango|pipewire|wireplumber|noctalia")))
+                                                  "mango|pipewire|wireplumber|noctalia|dbus-daemon|elogind|shepherd|Xwayland")))
 
                 (service fstrim-service-type)
                 (service polkit-service-type

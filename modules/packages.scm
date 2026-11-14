@@ -37,12 +37,27 @@
        ((#:phases phases
          #~%standard-phases)
         #~(modify-phases #$phases
+            (add-after 'unpack 'patch-theme-dir
+              (lambda* (#:key outputs #:allow-other-keys)
+                (substitute* "src/btop.cpp"
+                  (("\"\\.\\./share/btop/themes\"")
+                   (string-append "\""
+                                  (assoc-ref outputs "out")
+                                  "/share/btop/themes\"")))))
             (add-after 'install 'add-nvidia-runpath
               (lambda* (#:key outputs #:allow-other-keys)
                 (let ((binary (string-append (assoc-ref outputs "out")
                                              "/bin/btop")))
                   (invoke "patchelf" "--add-rpath"
-                          (string-append #$nvda-595 "/lib") binary))))))))))
+                          (string-append #$nvda-595 "/lib") binary))))
+            (add-after 'install 'patch-desktop-entry
+              (lambda* (#:key outputs #:allow-other-keys)
+                (let ((desktop (string-append (assoc-ref outputs "out")
+                                "/share/applications/btop.desktop")))
+                  (when (file-exists? desktop)
+                    (substitute* desktop
+                      (("Exec=btop")
+                       "Exec=/run/privileged/bin/btop"))))))))))))
 
 (define packages-list
   '( ;System utilities
@@ -54,9 +69,9 @@
     "glib:bin"
     "jq"
     "fzf"
+    "ripgrep"
     "libcap"
     "ncurses"
-    "btop"
     "btrfs-progs"
     "unzip"
     "cryptsetup"
