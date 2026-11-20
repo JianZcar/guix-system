@@ -8,6 +8,7 @@
              (gnu packages linux)
              (gnu system privilege)
              (nongnu packages linux)
+             (nongnu system linux-initrd)
              (modules desktop)
              (modules packages)
              (modules services)
@@ -24,6 +25,7 @@
                     (users (cons* user-jian %base-user-accounts))
                     (kernel linux)
                     (kernel-loadable-modules (list v4l2loopback-linux-module))
+                    (initrd microcode-initrd)
                     (firmware (cons* linux-firmware %base-firmware))
                     (packages (append (list mangowm-patch thunar-patch
                                             btop-patch desktop-session-tools)

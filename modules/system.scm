@@ -12,7 +12,7 @@
    "(public-key (ecc (curve Ed25519) (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))"))
 
 (define nvidia-transform
-  (nonguix-transformation-nvidia #:driver nvda-595
-                                 #:open-source-kernel-module? #t
+  (nonguix-transformation-nvidia #:driver nvda-580
+                                 #:open-source-kernel-module? #f
                                  #:kernel-mode-setting? #t
                                  #:dynamic-boost? #t))

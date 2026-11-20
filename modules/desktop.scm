@@ -158,29 +158,21 @@
                                                      #:respawn-delay 1
                                                      #:respawn-limit '(5 . 30))
 
-                                            (service '(desktop-login-sound)
-                                                     #:requirement '(pipewire
-                                                                     wireplumber
-                                                                     pipewire-pulse)
+                                            (service '(kanshi)
+                                                     #:requirement '(noctalia)
                                                      #:start (make-forkexec-constructor
                                                               (list #$(file-append
                                                                        (@ (gnu
                                                                            packages
-                                                                           libcanberra)
-                                                                        libcanberra)
-                                                                       "/bin/canberra-gtk-play")
-                                                               "-f"
-                                                               #$(file-append
-                                                                  (@ (gnu
-                                                                      packages
-                                                                      gnome-xyz)
-                                                                     yaru-theme)
-                                                                  "/share/sounds/Yaru/stereo/desktop-login.oga"))
-                                                               #:log-file (log-file
-                                                                          "desktop-login-sound"))
-                                                      #:stop (make-kill-destructor)
-                                                      #:one-shot? #t
-                                                      #:respawn? #f)))
+                                                                           window-management)
+                                                                        kanshi)
+                                                                       "/bin/kanshi"))
+                                                              #:log-file (log-file
+                                                                          "kanshi"))
+                                                     #:stop (make-kill-destructor)
+                                                     #:respawn? #t
+                                                     #:respawn-delay 1
+                                                     #:respawn-limit '(5 . 30))))
 
                    (start-in-the-background '(ssh-agent foot-server
                                               pipewire
@@ -189,7 +181,7 @@
                                               xdg-desktop-portal-wlr
                                               restart-xdg-desktop-portal
                                               noctalia
-                                              desktop-login-sound)))))
+                                              kanshi)))))
 
 (define desktop-shepherd
   (program-file "desktop-shepherd"

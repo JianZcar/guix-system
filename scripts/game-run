@@ -19,7 +19,7 @@ packages=(
   procps
 
   # Graphics
-  nvda
+  nvda@580
   mesa-utils
   vulkan-tools
 
@@ -56,6 +56,7 @@ guix shell \
   --preserve='^XAUTHORITY$' \
   --preserve='^__GLX_VENDOR_LIBRARY_NAME$' \
   --preserve='^__NV_PRIME_RENDER_OFFLOAD$' \
+  --preserve='^__VK_LAYER_NV_optimus$' \
   "${packages[@]}" \
-  --with-graft=mesa=nvda \
+  --with-graft=mesa=nvda@580 \
   -- "$@"

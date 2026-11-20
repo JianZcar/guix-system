@@ -2,7 +2,6 @@
         (name 'guix)
         (url "https://git.guix.gnu.org/guix.git")
         (branch "master")
-        (commit "475be2d55779a4605cf4047de9c02c3e4a1dae2f")
         (introduction
          (make-channel-introduction "9edb3f66fd807b096b48283debdcddccfea34bad"
           (openpgp-fingerprint
@@ -11,7 +10,6 @@
         (name 'nonguix)
         (url "https://gitlab.com/nonguix/nonguix")
         (branch "master")
-        (commit "63d83b22615e7a97a4fb0c3d9f6419e9a7fc4fe0")
         (introduction
          (make-channel-introduction "897c1a470da759236cc11798f4e0a5f7d4d59fbc"
           (openpgp-fingerprint
@@ -20,7 +18,6 @@
         (name 'rosenthal)
         (url "https://codeberg.org/hako/rosenthal.git")
         (branch "trunk")
-        (commit "bfe0d7379d399c7886e7c991d0c4bd01a3dfb015")
         (introduction
          (make-channel-introduction "7677db76330121a901604dfbad19077893865f35"
           (openpgp-fingerprint
@@ -28,18 +25,15 @@
       (channel
         (name 'mangowm)
         (url "https://github.com/mangowm/mango.git")
-        (branch "main")
-        (commit "faaf4a961f943692f2657eb992a8aa90022f921e"))
+        (branch "main"))
       (channel
         (name 'noctalia)
         (url "https://github.com/noctalia-dev/noctalia")
-        (branch "main")
-        (commit "43bfc457421db865961d18526967df7c85465f56"))
+        (branch "main"))
       (channel
         (name 'midnight)
         (url "https://codeberg.org/stampede/midnight.git")
         (branch "main")
-        (commit "c8dc9adee6d66930a2cac45015eccaae1bc1f6a3")
         (introduction
          (make-channel-introduction "d97d1568954cfcbf543c9fcdfd5771e2b730ae19"
           (openpgp-fingerprint

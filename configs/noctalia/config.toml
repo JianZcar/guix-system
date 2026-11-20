@@ -1,3 +1,9 @@
+config_version = 20
+
+[brightness]
+minimum_brightness = 0.01
+enable_ddcutil = true
+
 [audio]
 sound_theme = "Yaru"
 sound_volume = 1.0
@@ -57,8 +63,8 @@ order = [ "default" ]
         opacity = 1.0
         padding = 6.0 
 
-[brightness]
-minimum_brightness = 0.01
+[lockscreen]
+transition = [ "honeycomb" ]
 
 [desktop_widgets]
 widget_order = []

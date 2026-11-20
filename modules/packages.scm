@@ -49,7 +49,7 @@
                 (let ((binary (string-append (assoc-ref outputs "out")
                                              "/bin/btop")))
                   (invoke "patchelf" "--add-rpath"
-                          (string-append #$nvda-595 "/lib") binary))))
+                          (string-append #$nvda-580 "/lib") binary))))
             (add-after 'install 'patch-desktop-entry
               (lambda* (#:key outputs #:allow-other-keys)
                 (let ((desktop (string-append (assoc-ref outputs "out")
@@ -119,6 +119,7 @@
     "onnxruntime:python"
 
     ;; Desktop integration
+    "ddcutil"
     "gtk+"
     "gtk"
     "gsettings-desktop-schemas"
@@ -135,6 +136,7 @@
     ;; Wayland
     "wlr-randr"
     "wdisplays"
+    "kanshi"
     "wl-mirror"
     "wl-clipboard"
 
@@ -187,6 +189,6 @@
     "mangohud"
     "gamemode"
     "cartridges"
-    "steam-nvidia"
-    "heroic-nvidia"
+    "steam-nvidia@580"
+    "heroic-nvidia@580"
     "protonup"))
