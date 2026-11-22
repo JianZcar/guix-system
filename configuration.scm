@@ -9,11 +9,12 @@
              (gnu system privilege)
              (nongnu packages linux)
              (nongnu system linux-initrd)
-             (modules desktop)
-             (modules packages)
-             (modules services)
-             (modules system)
-             (modules users))
+              (modules desktop)
+              (modules kernel)
+              (modules packages)
+              (modules services)
+              (modules system)
+              (modules users))
 
 (nvidia-transform (operating-system
                     (locale "en_PH.utf8")
@@ -23,8 +24,9 @@
 
                     ;; The list of user accounts ('root' is implicit).
                     (users (cons* user-jian %base-user-accounts))
-                    (kernel linux)
-                    (kernel-loadable-modules (list v4l2loopback-linux-module))
+                    (kernel linux-cachyos-bore-intel)
+                    (kernel-arguments '("zswap.enabled=0"))
+                    (kernel-loadable-modules (list v4l2loopback-linux-module-cachyos))
                     (initrd microcode-initrd)
                     (firmware (cons* linux-firmware %base-firmware))
                     (packages (append (list mangowm-patch thunar-patch
