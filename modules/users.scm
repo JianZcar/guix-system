@@ -12,6 +12,7 @@
                             "input"
                             "audio"
                             "video"
+                            "i2c"
                             "kvm"
                             "libvirt"))))
 

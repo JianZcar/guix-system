@@ -254,14 +254,14 @@
                                        (cdr (command-line)))))
                     (primitive-exit status))))
 
-(define game-run-script
-  (local-file "../scripts/game-run"))
+(define run-game-script
+  (local-file "../scripts/run-game"))
 
-(define game-run
-  (program-file "game-run"
+(define run-game
+  (program-file "run-game"
                 #~(let ((status (apply system*
                                        #$(file-append bash "/bin/bash")
-                                       #$game-run-script
+                                       #$run-game-script
                                        (cdr (command-line)))))
                     (primitive-exit status))))
 
@@ -290,8 +290,8 @@
           (symlink #$nv
                    (string-append #$output "/bin/nv"))
 
-          (symlink #$game-run
-                   (string-append #$output "/bin/game-run")))))
+          (symlink #$run-game
+                   (string-append #$output "/bin/run-game")))))
 
     (inputs (list foot shepherd))
     (synopsis "Desktop session integration utilities")

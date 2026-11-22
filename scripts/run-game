@@ -6,6 +6,7 @@ packages=(
   coreutils
   glibc
   gcc-toolchain
+  jemalloc
   mono
 
   # Utilities
@@ -17,6 +18,22 @@ packages=(
   which
   util-linux
   procps
+  xz
+  lz4
+  zstd
+  tar
+  gzip
+  unrar
+  unzip
+  7zip
+  yad
+  zenity
+  cage
+
+  gtk
+  gtk+
+  hicolor-icon-theme
+  adwaita-icon-theme
 
   # Graphics
   nvda@580
@@ -32,10 +49,11 @@ packages=(
 
 guix shell \
   --container \
-  --no-cwd \
   --network \
   --emulate-fhs \
   --share="$HOME" \
+  --share=/tmp/.X11-unix \
+  --share="$XDG_RUNTIME_DIR" \
   --expose=/dev/nvidia0 \
   --expose=/dev/nvidiactl \
   --expose=/dev/nvidia-modeset \
@@ -43,8 +61,6 @@ guix shell \
   --expose=/dev/dri \
   --expose=/dev/snd \
   --expose=/sys \
-  --expose="$XDG_RUNTIME_DIR" \
-  --expose=/tmp/.X11-unix \
   --preserve='^HOME$' \
   --preserve='^WAYLAND_DISPLAY$' \
   --preserve='^XDG_RUNTIME_DIR$' \
@@ -58,5 +74,4 @@ guix shell \
   --preserve='^__NV_PRIME_RENDER_OFFLOAD$' \
   --preserve='^__VK_LAYER_NV_optimus$' \
   "${packages[@]}" \
-  --with-graft=mesa=nvda@580 \
   -- "$@"

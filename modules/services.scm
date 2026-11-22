@@ -6,6 +6,7 @@
   #:use-module (guix build-system trivial)
   #:use-module (gnu)
   #:use-module (gnu services pm)
+  #:use-module (gnu services base)
   #:use-module (gnu services dbus)
   #:use-module (gnu services linux)
   #:use-module (gnu services desktop)
@@ -21,6 +22,7 @@
   #:use-module (gnu packages admin)
   #:use-module (gnu packages gnome)
   #:use-module (gnu services sysctl)
+  #:use-module (gnu packages hardware)
   #:use-module (gnu packages terminals)
   #:use-module (gnu packages freedesktop)
   #:use-module (gnu packages password-utils)
@@ -110,9 +112,8 @@
 
                 (service virtlog-service-type)
 
-                (udev-rules-service 'steam-input
-                                    (udev-rule "60-steam-input.rules"
-                                     "KERNEL==\"uinput\", SUBSYSTEM==\"misc\", GROUP=\"input\", MODE=\"0660\", OPTIONS+=\"static_node=uinput\""))
+                (udev-rules-service 'ddcutil ddcutil
+                                    #:groups '("i2c"))
 
                 (service noctalia-greeter-service-type
                          (noctalia-greeter-configuration (cursor (noctalia-greeter-cursor-configuration
