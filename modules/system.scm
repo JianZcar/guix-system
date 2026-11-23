@@ -31,4 +31,4 @@
          (nvidia-service-type config =>
                               (nvidia-configuration (inherit config)
                                                     (module
-                                                     nvidia-module-580-cachyos))))))))
+                                                     nvidia-module-580-cachyos-clang-lto))))))))
