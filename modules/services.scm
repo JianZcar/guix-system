@@ -52,14 +52,15 @@
                 (service thermald-service-type)
 
                 (service zram-device-service-type
-                         (zram-device-configuration (size "64g")
+                         (zram-device-configuration (size "24g")
                                                     (compression-algorithm 'lz4)
                                                     (priority 100)))
 
                 (simple-service 'zram-sysctl sysctl-service-type
-                                '(("vm.swappiness" . "180")
+                                '(("vm.swappiness" . "100")
                                   ("vm.watermark_boost_factor" . "0")
-                                  ("vm.watermark_scale_factor" . "125")
+                                  ("vm.watermark_scale_factor" . "10")
+                                  ("vm.compaction_proactiveness" . "0")
                                   ("vm.page-cluster" . "0")))
 
                 (service earlyoom-service-type

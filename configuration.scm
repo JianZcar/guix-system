@@ -25,7 +25,7 @@
                     ;; The list of user accounts ('root' is implicit).
                     (users (cons* user-jian %base-user-accounts))
                     (kernel linux-cachyos-bore-intel)
-                    (kernel-arguments '("zswap.enabled=0"))
+                    (kernel-arguments '("zswap.enabled=0" "transparent_hugepage=madvise"))
                     (kernel-loadable-modules (list v4l2loopback-linux-module-cachyos))
                     (initrd microcode-initrd)
                     (firmware (cons* linux-firmware %base-firmware))
