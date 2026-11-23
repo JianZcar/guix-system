@@ -5,7 +5,8 @@
   #:use-module (gnu packages admin)
   #:use-module (gnu packages elf)
   #:use-module (nongnu packages nvidia)
-  #:export (thunar-patch btop-patch packages-list))
+  #:use-module (nongnu packages video)
+  #:export (thunar-patch btop-patch obs-nvidia-patch packages-list))
 
 (define thunar-patch
   (package
@@ -58,6 +59,19 @@
                     (substitute* desktop
                       (("Exec=btop")
                        "Exec=/run/privileged/bin/btop"))))))))))))
+
+(define obs-nvidia-patch
+  (package/inherit obs-nvidia
+    (name "obs-nvidia-patch")
+    (arguments (substitute-keyword-arguments (package-arguments obs-nvidia)
+                 ((#:phases phases
+                   #~%standard-phases)
+                  #~(modify-phases #$phases
+                      (add-after 'unpack 'trust-builtin-v4l2loopback
+                        (lambda _
+                          (substitute* "plugins/linux-v4l2/v4l2-output.c"
+                            (("return loaded;")
+                             "return true;"))))))))))
 
 (define packages-list
   '( ;System utilities
@@ -180,7 +194,6 @@
     "decibels"
     "gnome-calculator"
     "ungoogled-chromium"
-    "obs-nvidia"
     "obs-wlrobs"
     "v4l-utils"
     "fuzzel"

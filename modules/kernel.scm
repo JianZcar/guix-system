@@ -10,8 +10,7 @@
   #:use-module (gnu packages linux)
   #:use-module (nongnu packages linux)
   #:use-module (nongnu packages nvidia)
-  #:export (linux-cachyos-bore-clang-lto nvidia-module-580-cachyos-clang-lto
-            v4l2loopback-linux-module-cachyos-clang-lto))
+  #:export (linux-cachyos-bore-clang-lto nvidia-module-580-cachyos-clang-lto))
 
 (define cachyos-version
   "7.3.5-2")
@@ -55,30 +54,44 @@
     (patches (list cachyos-bore-patch cachyos-dkms-clang-patch))))
 
 (define cachyos-configs
-  '("CONFIG_SCHED_BORE=y" "CONFIG_HZ_1000=y"
+  '("CONFIG_CACHY=y" "CONFIG_SCHED_BORE=y"
+    "CONFIG_HZ_1000=y"
+    "# CONFIG_HZ_100 is not set"
+    "# CONFIG_HZ_250 is not set"
+    "# CONFIG_HZ_300 is not set"
+    "# CONFIG_HZ_500 is not set"
+    "# CONFIG_HZ_600 is not set"
+    "# CONFIG_HZ_750 is not set"
     "CONFIG_HZ=1000"
-    "CONFIG_HZ_100"
-    "CONFIG_HZ_250"
-    "CONFIG_HZ_300"
-    "CONFIG_HZ_500"
-    "CONFIG_HZ_600"
-    "CONFIG_HZ_750"
     "CONFIG_X86_NATIVE_CPU=y"
-    "CONFIG_GENERIC_CPU"
-    "CONFIG_MZEN4"
-    "CONFIG_X86_64_VERSION"
+    "# CONFIG_GENERIC_CPU is not set"
+    "# CONFIG_MZEN4 is not set"
+    "# CONFIG_X86_64_VERSION is not set"
     "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y"
-    "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE"
-    "CONFIG_V4L2_LOOPBACK"
-    "CONFIG_RUST"
-    "CONFIG_RUST_FW_LOADER_ABSTRACTIONS"
-    "CONFIG_RUST_SERIAL_DEV_BUS_ABSTRACTIONS"
-    "CONFIG_ANDROID_BINDER_IPC_RUST"
-    "CONFIG_RUST_OVERFLOW_CHECKS"
+    "# CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE is not set"
+    "CONFIG_MEDIA_SUPPORT=y"
+    "CONFIG_VIDEO_DEV=y"
+    "CONFIG_V4L2_LOOPBACK=y"
     "CONFIG_LTO_CLANG_THIN=y"
     "# CONFIG_LTO_NONE is not set"
     "# CONFIG_LTO_CLANG_FULL is not set"
-    "# CONFIG_LTO_CLANG_THIN_DIST is not set"))
+    "# CONFIG_LTO_CLANG_THIN_DIST is not set"
+    "CONFIG_DEBUG_INFO_NONE=y"
+    "# CONFIG_DEBUG_INFO is not set"
+    "# CONFIG_DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT is not set"
+    "# CONFIG_DEBUG_INFO_DWARF4 is not set"
+    "# CONFIG_DEBUG_INFO_DWARF5 is not set"
+    "# CONFIG_DEBUG_INFO_BTF is not set"
+    "# CONFIG_DEBUG_INFO_BTF_MODULES is not set"
+    "# CONFIG_SCHED_CLASS_EXT is not set"
+    "# CONFIG_BINFMT_MISC_BPF is not set"
+    "# CONFIG_NET_SCH_BPF is not set"
+    "# CONFIG_GDB_SCRIPTS is not set"
+    "# CONFIG_RUST is not set"
+    "# CONFIG_RUST_FW_LOADER_ABSTRACTIONS is not set"
+    "# CONFIG_RUST_SERIAL_DEV_BUS_ABSTRACTIONS is not set"
+    "# CONFIG_ANDROID_BINDER_IPC_RUST is not set"
+    "# CONFIG_RUST_OVERFLOW_CHECKS is not set"))
 
 (define cachyos-base
   (customize-linux #:name "linux-cachyos-bore-clang-lto"
@@ -139,23 +152,5 @@
          #~(list))
         #~(list "CC=clang" "LLVM=1" "LLVM_IAS=1" "LD=ld.lld"))))
     (native-inputs (modify-inputs (package-native-inputs nvidia-module-580)
-                     (prepend clang llvm lld-wrapper
-                              (list gcc "lib"))))))
-
-(define v4l2loopback-linux-module-cachyos-clang-lto
-  (package
-    (inherit v4l2loopback-linux-module)
-    (name "v4l2loopback-linux-module-cachyos-clang-lto")
-    (arguments
-     (substitute-keyword-arguments (package-arguments
-                                    v4l2loopback-linux-module)
-       ((#:linux linux #f)
-        linux-cachyos-bore-clang-lto)
-       ((#:make-flags flags
-         #~(list))
-        #~(append #$flags
-                  '("CC=clang" "LLVM=1" "LLVM_IAS=1" "LD=ld.lld")))))
-    (native-inputs (modify-inputs (package-native-inputs
-                                   v4l2loopback-linux-module)
                      (prepend clang llvm lld-wrapper
                               (list gcc "lib"))))))

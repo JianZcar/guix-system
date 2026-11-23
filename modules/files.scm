@@ -3,7 +3,6 @@
   #:use-module (gnu packages linux)
   #:use-module (gnu packages gnome)
   #:export (networkmanager-polkit-rules asound-conf
-                                        obs-virtual-camera-conf
                                         greeter-conf
                                         mango-base-config
                                         mango-config
@@ -38,11 +37,6 @@
                    "}\n"
                    "pcm.!default { type pipewire }\n"
                    "ctl.!default { type pipewire }\n"))
-
-(define obs-virtual-camera-conf
-  (plain-file "v4l2loopback.conf"
-   "options v4l2loopback devices=1 video_nr=10 card_label=\"OBS Virtual Camera\" exclusive_caps=1
-"))
 
 (define greeter-conf
   (local-file "../configs/greetd/greeter.toml"))

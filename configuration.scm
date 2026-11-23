@@ -25,12 +25,18 @@
                     ;; The list of user accounts ('root' is implicit).
                     (users (cons* user-jian %base-user-accounts))
                     (kernel linux-cachyos-bore-clang-lto)
-                    (kernel-arguments '("zswap.enabled=0" "transparent_hugepage=madvise"))
-                    (kernel-loadable-modules (list v4l2loopback-linux-module-cachyos-clang-lto))
+                    (kernel-arguments '("zswap.enabled=0"
+                                        "transparent_hugepage=madvise"
+                                        "v4l2loopback.devices=1"
+                                        "v4l2loopback.video_nr=10"
+                                        "v4l2loopback.card_label=OBS-Virtual-Camera"
+                                        "v4l2loopback.exclusive_caps=1"))
                     (initrd microcode-initrd)
                     (firmware (cons* linux-firmware %base-firmware))
                     (packages (append (list mangowm-patch thunar-patch
-                                            btop-patch desktop-session-tools)
+                                            btop-patch obs-nvidia-patch
+                                            desktop-session-tools)
+
                                       (specifications->packages packages-list)
                                       %base-packages))
 

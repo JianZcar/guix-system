@@ -94,12 +94,6 @@
 
                 (service ntp-service-type)
 
-                (service kernel-module-loader-service-type
-                         '("v4l2loopback"))
-
-                (simple-service 'obs-virtual-camera-config etc-service-type
-                                (list `("modprobe.d/v4l2loopback.conf" ,obs-virtual-camera-conf)))
-
                 ;; sound
                 (service rtkit-service-type)
                 (simple-service 'asound-conf etc-service-type
