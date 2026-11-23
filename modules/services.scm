@@ -54,6 +54,7 @@
                 (service zram-device-service-type
                          (zram-device-configuration (size "24g")
                                                     (compression-algorithm 'lz4)
+                                                    (memory-limit "6G")
                                                     (priority 100)))
 
                 (simple-service 'zram-sysctl sysctl-service-type
