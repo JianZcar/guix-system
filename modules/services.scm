@@ -33,9 +33,9 @@
   #:use-module (modules files)
   #:use-module (modules system)
   #:use-module (modules users)
-  #:export (services-list))
+  #:export (services))
 
-(define services-list
+(define services
   (append (list ;use substitutes from nonguix.
                 (simple-service 'substitute-servers guix-service-type
                                 (guix-extension (substitute-urls (list

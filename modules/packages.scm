@@ -4,9 +4,12 @@
   #:use-module (guix utils)
   #:use-module (gnu packages admin)
   #:use-module (gnu packages elf)
+  #:use-module (gnu system)
+  #:use-module (gnu system privilege)
   #:use-module (nongnu packages nvidia)
   #:use-module (nongnu packages video)
-  #:export (thunar-patch make-btop-patch make-obs-patch packages-list))
+  #:use-module (modules desktop)
+  #:export (packages patch-packages privileged-programs))
 
 (define thunar-patch
   (package
@@ -85,7 +88,7 @@
                               (("return loaded;")
                                "return true;")))))))))))
 
-(define (packages-list enable-nvidia?)
+(define (packages enable-nvidia?)
   (append '( ;System utilities
              "acpi"
             "coreutils"
@@ -218,3 +221,14 @@
           (if enable-nvidia?
               '("steam-nvidia@580" "heroic-nvidia@580")
               '())))
+
+(define (patch-packages enable-nvidia?)
+  (list mangowm-patch thunar-patch
+        (make-btop-patch enable-nvidia?)
+        (make-obs-patch enable-nvidia?)
+        (make-desktop-session-tools enable-nvidia?)))
+
+(define (privileged-programs enable-nvidia?)
+  (cons (privileged-program
+          (program (file-append (make-btop-patch enable-nvidia?) "/bin/btop"))
+          (capabilities "cap_perfmon=ep")) %default-privileged-programs))

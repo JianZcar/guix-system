@@ -1,5 +1,3 @@
-;; Indicate which modules to import to access the variables
-;; used in this configuration.
 (add-to-load-path (dirname (current-filename)))
 
 (use-modules (guix gexp)
@@ -18,18 +16,8 @@
 
 (define enable-nvidia? #t)
 
-(define btop-patch (make-btop-patch enable-nvidia?))
-(define obs-patch (make-obs-patch enable-nvidia?))
-(define desktop-session-tools (make-desktop-session-tools enable-nvidia?))
-
 (nvidia-transform enable-nvidia? (operating-system
-                    (locale "en_PH.utf8")
-                    (timezone "Asia/Manila")
-                    (keyboard-layout (keyboard-layout "us"))
-                    (host-name system-hostname)
-
-                    ;; The list of user accounts ('root' is implicit).
-                    (users (append user-accounts %base-user-accounts))
+                    (initrd microcode-initrd)
                     (kernel kernel-cachyos)
                     (kernel-arguments '("zswap.enabled=0"
                                         "transparent_hugepage=madvise"
@@ -37,27 +25,23 @@
                                         "v4l2loopback.video_nr=10"
                                         "v4l2loopback.card_label=OBS-Virtual-Camera"
                                         "v4l2loopback.exclusive_caps=1"))
-                    (initrd microcode-initrd)
+
                     (firmware (cons* linux-firmware %base-firmware))
-                    (packages (append (list mangowm-patch thunar-patch
-                                             btop-patch obs-patch
-                                             desktop-session-tools)
 
-                                       (specifications->packages
-                                        (packages-list enable-nvidia?))
+                    (locale "en_PH.utf8")
+                    (timezone "Asia/Manila")
+                    (keyboard-layout (keyboard-layout "us"))
+                    (host-name system-hostname)
+
+                    (users (append user-accounts %base-user-accounts))
+
+                    (packages (append (patch-packages enable-nvidia?)
+                                      (specifications->packages
+                                        (packages enable-nvidia?))
                                       %base-packages))
+                    (privileged-programs (privileged-programs enable-nvidia?))
 
-                    (privileged-programs (cons (privileged-program
-                                                 (program (file-append
-                                                           btop-patch
-                                                           "/bin/btop"))
-                                                 (capabilities
-                                                  "cap_perfmon=ep"))
-                                               %default-privileged-programs))
-
-                    ;; Below is the list of system services.  To search for available
-                    ;; services, run 'guix system search KEYWORD' in a terminal.
-                    (services services-list)
+                    (services services)
 
                     (bootloader (bootloader-configuration
                                   (bootloader grub-efi-bootloader)
