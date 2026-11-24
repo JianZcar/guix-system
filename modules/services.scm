@@ -5,6 +5,7 @@
   #:use-module (guix gexp)
   #:use-module (guix build-system trivial)
   #:use-module (gnu)
+  #:use-module (gnu system)
   #:use-module (gnu services pm)
   #:use-module (gnu services base)
   #:use-module (gnu services dbus)
@@ -33,9 +34,9 @@
   #:use-module (modules files)
   #:use-module (modules system)
   #:use-module (modules users)
-  #:export (services))
+  #:export (make-services))
 
-(define services
+(define (make-services os)
   (append (list ;use substitutes from nonguix.
                 (simple-service 'substitute-servers guix-service-type
                                 (guix-extension (substitute-urls (list
@@ -82,7 +83,8 @@
                 (service udisks-service-type)
 
                 (service bluetooth-service-type
-                         (bluetooth-configuration (name system-hostname)))
+                         (bluetooth-configuration (name (operating-system-host-name
+                                                         os))))
 
                 ;; networking
                 (service wpa-supplicant-service-type)

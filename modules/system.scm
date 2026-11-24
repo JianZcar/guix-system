@@ -7,10 +7,7 @@
   #:use-module (nongnu packages nvidia)
   #:use-module (nongnu services nvidia)
   #:use-module (modules kernel)
-  #:export (system-hostname nonguix-signing-key nvidia-transform))
-
-(define system-hostname
-  "zena")
+  #:export (nonguix-signing-key nvidia-transform))
 
 (define nonguix-signing-key
   (plain-file "nonguix.pub"

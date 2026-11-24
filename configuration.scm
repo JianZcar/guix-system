@@ -16,7 +16,12 @@
 
 (define enable-nvidia? #t)
 
-(nvidia-transform enable-nvidia? (operating-system
+(define (add-services os)
+  (operating-system
+    (inherit os)
+    (services (make-services os))))
+
+(nvidia-transform enable-nvidia? (add-services (operating-system
                     (initrd microcode-initrd)
                     (kernel kernel-cachyos)
                     (kernel-arguments '("zswap.enabled=0"
@@ -31,7 +36,7 @@
                     (locale "en_PH.utf8")
                     (timezone "Asia/Manila")
                     (keyboard-layout (keyboard-layout "us"))
-                    (host-name system-hostname)
+                    (host-name "zena")
 
                     (users (append user-accounts %base-user-accounts))
 
@@ -41,7 +46,7 @@
                                       %base-packages))
                     (privileged-programs (privileged-programs enable-nvidia?))
 
-                    (services services)
+                    (services '())
 
                     (bootloader (bootloader-configuration
                                   (bootloader grub-efi-bootloader)
@@ -63,10 +68,10 @@
                                            (type "btrfs")
                                            (flags '(no-atime))
                                            (options
-                                            "compress=zstd:3,space_cache=v2,commit=120")
+                                            "compress=zstd:3,space_cache=v2")
                                            (dependencies mapped-devices))
                                           (file-system
                                             (mount-point "/boot/efi")
                                             (device (uuid "A604-A46D"
                                                           'fat32))
-                                            (type "vfat")) %base-file-systems))))
+                                            (type "vfat")) %base-file-systems)))))
