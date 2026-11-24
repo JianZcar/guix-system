@@ -27,7 +27,6 @@
   #:use-module (gnu packages freedesktop)
   #:use-module (gnu packages password-utils)
   #:use-module (nonguix)
-  #:use-module (nongnu packages nvidia)
   #:use-module (rosenthal services networking)
   #:use-module (midnight services noctalia-greeter)
   #:use-module (modules desktop)
@@ -119,8 +118,8 @@
                                                                   (size 24)))
                                                          (config-file (list
                                                                        greeter-conf))
-                                                         (passwordless-sync-users '
-                                                          ("jian"))))
+                                                         (passwordless-sync-users
+                                                          passwordless-sync-users)))
                 (service greetd-service-type
                          (greetd-configuration (greeter-supplementary-groups '
                                                                              ("video"

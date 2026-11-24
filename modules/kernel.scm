@@ -10,21 +10,21 @@
   #:use-module (gnu packages linux)
   #:use-module (nongnu packages linux)
   #:use-module (nongnu packages nvidia)
-  #:export (linux-cachyos-bore-clang-lto nvidia-module-580-cachyos-clang-lto))
+  #:export (kernel-cachyos nvidia-module-cachyos))
 
-(define cachyos-version
+(define kernel-cachyos-version
   "7.3.5-2")
 
-(define cachyos-tarball
+(define kernel-cachyos-tarball
   (origin
     (method url-fetch)
     (uri (string-append
           "https://github.com/CachyOS/linux/releases/download/cachyos-"
-          cachyos-version "/cachyos-" cachyos-version ".tar.gz"))
-    (file-name (string-append "cachyos-" cachyos-version ".tar.gz"))
+          kernel-cachyos-version "/cachyos-" kernel-cachyos-version ".tar.gz"))
+    (file-name (string-append "cachyos-" kernel-cachyos-version ".tar.gz"))
     (sha256 (base32 "01rf14wk74nl5blly025q1s7ndirhdpkcwdb7f4awbq4w6css8mv"))))
 
-(define cachyos-bore-patch
+(define kernel-cachyos-bore-patch
   (origin
     (method url-fetch)
     (uri
@@ -32,7 +32,7 @@
     (file-name "0001-bore-cachy.patch")
     (sha256 (base32 "1d3k47f8mbvv6q0kgachix06a2n3gmx472sg63xnpxgivglaisnj"))))
 
-(define cachyos-dkms-clang-patch
+(define kernel-cachyos-dkms-clang-patch
   (origin
     (method url-fetch)
     (uri
@@ -40,7 +40,7 @@
     (file-name "dkms-clang.patch")
     (sha256 (base32 "0jrbf6vghqdw7wrq55qz2f577g8acfqfzgxdzf42wya1704fyibg"))))
 
-(define cachyos-config
+(define kernel-cachyos-config
   (origin
     (method url-fetch)
     (uri
@@ -48,12 +48,12 @@
     (file-name "cachyos-bore.config")
     (sha256 (base32 "1s1xggyr82n6ycxbwzif8rwsnpr69aj8xsyxjkz7xgyv3lq66nb4"))))
 
-(define cachyos-source
+(define kernel-cachyos-source
   (origin
-    (inherit cachyos-tarball)
-    (patches (list cachyos-bore-patch cachyos-dkms-clang-patch))))
+    (inherit kernel-cachyos-tarball)
+    (patches (list kernel-cachyos-bore-patch kernel-cachyos-dkms-clang-patch))))
 
-(define cachyos-configs
+(define kernel-cachyos-configs
   '("CONFIG_CACHY=y" "CONFIG_SCHED_BORE=y"
     "CONFIG_HZ_1000=y"
     "# CONFIG_HZ_100 is not set"
@@ -93,21 +93,21 @@
     "# CONFIG_ANDROID_BINDER_IPC_RUST is not set"
     "# CONFIG_RUST_OVERFLOW_CHECKS is not set"))
 
-(define cachyos-base
-  (customize-linux #:name "linux-cachyos-bore-clang-lto"
+(define kernel-cachyos-base
+  (customize-linux #:name "kernel-cachyos"
                    #:linux linux-libre
-                   #:source cachyos-source
+                   #:source kernel-cachyos-source
                    #:defconfig "cachyos_defconfig"
-                   #:extra-version "cachyos-bore-clang-lto"
-                   #:configs cachyos-configs))
+                   #:extra-version "kernel-cachyos"
+                   #:configs kernel-cachyos-configs))
 
-(define linux-cachyos-bore-clang-lto
+(define kernel-cachyos
   (package
-    (inherit cachyos-base)
-    (version cachyos-version)
+    (inherit kernel-cachyos-base)
+    (version kernel-cachyos-version)
     (supported-systems '("x86_64-linux"))
     (arguments
-     (substitute-keyword-arguments (package-arguments cachyos-base)
+     (substitute-keyword-arguments (package-arguments kernel-cachyos-base)
        ((#:phases phases)
         #~(modify-phases #$phases
             (add-before 'configure 'prepare-cachyos-defconfig
@@ -116,7 +116,7 @@
                 (setenv "LLVM_IAS" "1")
                 (setenv "CC" "clang")
                 (setenv "LD" "ld.lld")
-                (copy-file #$cachyos-config ".config")
+                (copy-file #$kernel-cachyos-config ".config")
                 (invoke "make" "olddefconfig")
                 (invoke "make" "savedefconfig")
                 (rename-file "defconfig" "arch/x86/configs/cachyos_defconfig")))
@@ -128,7 +128,7 @@
          #~(list))
         #~(append #$flags
                   '("LLVM=1" "LLVM_IAS=1" "CC=clang" "LD=ld.lld")))))
-    (native-inputs (modify-inputs (package-native-inputs cachyos-base)
+    (native-inputs (modify-inputs (package-native-inputs kernel-cachyos-base)
                      (prepend cpio
                               zstd
                               clang
@@ -136,18 +136,18 @@
                               lld-wrapper
                               (list gcc "lib"))))
     (home-page "https://github.com/CachyOS/linux")
-    (synopsis "CachyOS BORE kernel built with Clang ThinLTO")
+    (synopsis "CachyOS Linux kernel")
     (description
-     "CachyOS Linux kernel with BORE scheduler, Clang ThinLTO, CachyOS configuration, and native x86-64 CPU tuning.")))
+     "CachyOS Linux kernel built with the BORE scheduler, Clang/LLVM ThinLTO, native x86-64 CPU tuning, and the CachyOS configuration.")))
 
-(define nvidia-module-580-cachyos-clang-lto
+(define nvidia-module-cachyos
   (package
     (inherit nvidia-module-580)
-    (name "nvidia-module-580-cachyos-clang-lto")
+    (name "nvidia-module-cachyos")
     (arguments
      (substitute-keyword-arguments (package-arguments nvidia-module-580)
        ((#:linux linux #f)
-        linux-cachyos-bore-clang-lto)
+        kernel-cachyos)
        ((#:make-flags flags
          #~(list))
         #~(list "CC=clang" "LLVM=1" "LLVM_IAS=1" "LD=ld.lld"))))

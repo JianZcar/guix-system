@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+nvidia=${1:-}
+if [[ $# -gt 0 ]]; then shift; fi
+
 packages=(
   bash
   coreutils
@@ -36,7 +39,6 @@ packages=(
   adwaita-icon-theme
 
   # Graphics
-  nvda@580
   mesa-utils
   vulkan-tools
 
@@ -47,6 +49,24 @@ packages=(
   alsa-plugins
 )
 
+gpu_args=(--expose=/dev/dri)
+preserve_args=()
+
+if [[ "$nvidia" == "--nvidia" ]]; then
+  packages+=(nvda@580)
+  gpu_args+=(
+    --expose=/dev/nvidia0
+    --expose=/dev/nvidiactl
+    --expose=/dev/nvidia-modeset
+    --expose=/dev/nvidia-uvm
+  )
+  preserve_args+=(
+    --preserve='^__GLX_VENDOR_LIBRARY_NAME$'
+    --preserve='^__NV_PRIME_RENDER_OFFLOAD$'
+    --preserve='^__VK_LAYER_NV_optimus$'
+  )
+fi
+
 guix shell \
   --container \
   --network \
@@ -54,11 +74,7 @@ guix shell \
   --share="$HOME" \
   --share=/tmp/.X11-unix \
   --share="$XDG_RUNTIME_DIR" \
-  --expose=/dev/nvidia0 \
-  --expose=/dev/nvidiactl \
-  --expose=/dev/nvidia-modeset \
-  --expose=/dev/nvidia-uvm \
-  --expose=/dev/dri \
+  "${gpu_args[@]}" \
   --expose=/dev/snd \
   --expose=/sys \
   --preserve='^HOME$' \
@@ -70,8 +86,6 @@ guix shell \
   --preserve='^PULSE_SERVER$' \
   --preserve='^PIPEWIRE_REMOTE$' \
   --preserve='^XAUTHORITY$' \
-  --preserve='^__GLX_VENDOR_LIBRARY_NAME$' \
-  --preserve='^__NV_PRIME_RENDER_OFFLOAD$' \
-  --preserve='^__VK_LAYER_NV_optimus$' \
+  "${preserve_args[@]}" \
   "${packages[@]}" \
   -- "$@"

@@ -10,7 +10,8 @@
   #:use-module (gnu packages ssh)
   #:use-module (gnu packages terminals)
   #:export (mango-session mangowm-patch desktop-shepherd
-                          desktop-shepherd-autostart desktop-session-tools
+                          desktop-shepherd-autostart
+                          make-desktop-session-tools
                           xdg-desktop-portal-wlr-patch))
 
 (define mango-session-script
@@ -246,7 +247,7 @@
 (define nv-script
   (local-file "../scripts/nv"))
 
-(define nv
+(define (make-nv)
   (program-file "nv"
                 #~(let ((status (apply system*
                                        #$(file-append bash "/bin/bash")
@@ -257,48 +258,56 @@
 (define run-game-script
   (local-file "../scripts/run-game"))
 
-(define run-game
+(define (make-run-game enable-nvidia?)
   (program-file "run-game"
                 #~(let ((status (apply system*
                                        #$(file-append bash "/bin/bash")
                                        #$run-game-script
+                                       #$(if enable-nvidia? "--nvidia"
+                                             "--no-nvidia")
                                        (cdr (command-line)))))
                     (primitive-exit status))))
 
-(define desktop-session-tools
-  (package
-    (name "desktop-session-tools")
-    (version "1.0")
-    (source
-     #f)
-    (build-system trivial-build-system)
-    (arguments
-     (list
-      #:modules '((guix build utils))
-      #:builder
-      #~(begin
-          (use-modules (guix build utils))
+(define (make-desktop-session-tools enable-nvidia?)
+  (let* ((nv (and enable-nvidia?
+                  (make-nv)))
+         (run-game (make-run-game enable-nvidia?)))
+    (package
+      (name "desktop-session-tools")
+      (version "1.0")
+      (source
+       #f)
+      (build-system trivial-build-system)
+      (arguments
+       (list
+        #:modules '((guix build utils))
+        #:builder
+        #~(begin
+            (use-modules (guix build utils))
 
-          (mkdir-p (string-append #$output "/bin"))
+            (mkdir-p (string-append #$output "/bin"))
 
-          (symlink #$xterm-wrapper
-                   (string-append #$output "/bin/xterm"))
+            (symlink #$xterm-wrapper
+                     (string-append #$output "/bin/xterm"))
 
-          (symlink #$desktop-herd
-                   (string-append #$output "/bin/desktop-herd"))
+            (symlink #$desktop-herd
+                     (string-append #$output "/bin/desktop-herd"))
 
-          (symlink #$nv
-                   (string-append #$output "/bin/nv"))
+            #$(if nv
+                  #~(symlink #$nv
+                             (string-append #$output "/bin/nv"))
+                  #~(begin
+                      ))
 
-          (symlink #$run-game
-                   (string-append #$output "/bin/run-game")))))
+            (symlink #$run-game
+                     (string-append #$output "/bin/run-game")))))
 
-    (inputs (list foot shepherd))
-    (synopsis "Desktop session integration utilities")
-    (description "Provides helper utilities for improved desktop experience,
+      (inputs (list foot shepherd))
+      (synopsis "Desktop session integration utilities")
+      (description "Provides helper utilities for improved desktop experience,
 application integration, and session management.")
-    (home-page "https://github.com/JianZcar/guix-system")
-    (license #f)))
+      (home-page "https://github.com/JianZcar/guix-system")
+      (license #f))))
 
 (define mango-session
   (program-file "mango-session"

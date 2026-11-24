@@ -9,22 +9,28 @@
              (gnu system privilege)
              (nongnu packages linux)
              (nongnu system linux-initrd)
-              (modules desktop)
-              (modules kernel)
-              (modules packages)
-              (modules services)
-              (modules system)
-              (modules users))
+             (modules desktop)
+             (modules kernel)
+             (modules packages)
+             (modules services)
+             (modules system)
+             (modules users))
 
-(nvidia-transform (operating-system
+(define enable-nvidia? #t)
+
+(define btop-patch (make-btop-patch enable-nvidia?))
+(define obs-patch (make-obs-patch enable-nvidia?))
+(define desktop-session-tools (make-desktop-session-tools enable-nvidia?))
+
+(nvidia-transform enable-nvidia? (operating-system
                     (locale "en_PH.utf8")
                     (timezone "Asia/Manila")
                     (keyboard-layout (keyboard-layout "us"))
                     (host-name system-hostname)
 
                     ;; The list of user accounts ('root' is implicit).
-                    (users (cons* user-jian %base-user-accounts))
-                    (kernel linux-cachyos-bore-clang-lto)
+                    (users (append user-accounts %base-user-accounts))
+                    (kernel kernel-cachyos)
                     (kernel-arguments '("zswap.enabled=0"
                                         "transparent_hugepage=madvise"
                                         "v4l2loopback.devices=1"
@@ -34,10 +40,11 @@
                     (initrd microcode-initrd)
                     (firmware (cons* linux-firmware %base-firmware))
                     (packages (append (list mangowm-patch thunar-patch
-                                            btop-patch obs-nvidia-patch
-                                            desktop-session-tools)
+                                             btop-patch obs-patch
+                                             desktop-session-tools)
 
-                                      (specifications->packages packages-list)
+                                       (specifications->packages
+                                        (packages-list enable-nvidia?))
                                       %base-packages))
 
                     (privileged-programs (cons (privileged-program
@@ -50,13 +57,13 @@
 
                     ;; Below is the list of system services.  To search for available
                     ;; services, run 'guix system search KEYWORD' in a terminal.
-                    (services
-                     services-list)
+                    (services services-list)
 
                     (bootloader (bootloader-configuration
                                   (bootloader grub-efi-bootloader)
                                   (targets (list "/boot/efi"))
                                   (keyboard-layout keyboard-layout)))
+
                     (mapped-devices (list (mapped-device
                                             (source (uuid
                                                      "324ed28c-917e-4e21-9f01-ee863599bd13"))

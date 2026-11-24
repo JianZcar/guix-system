@@ -6,7 +6,7 @@
   #:use-module (gnu packages elf)
   #:use-module (nongnu packages nvidia)
   #:use-module (nongnu packages video)
-  #:export (thunar-patch btop-patch obs-nvidia-patch packages-list))
+  #:export (thunar-patch make-btop-patch make-obs-patch packages-list))
 
 (define thunar-patch
   (package
@@ -27,181 +27,194 @@
                       (("exo-open --working-directory %f --launch TerminalEmulator")
                        "xterm"))))))))))))
 
-(define btop-patch
-  (package
-    (inherit btop)
-    (name "btop-patch")
-    (native-inputs (modify-inputs (package-native-inputs btop)
-                     (append patchelf)))
-    (arguments
-     (substitute-keyword-arguments (package-arguments btop)
-       ((#:phases phases
-         #~%standard-phases)
-        #~(modify-phases #$phases
-            (add-after 'unpack 'patch-theme-dir
-              (lambda* (#:key outputs #:allow-other-keys)
-                (substitute* "src/btop.cpp"
-                  (("\"\\.\\./share/btop/themes\"")
-                   (string-append "\""
-                                  (assoc-ref outputs "out")
-                                  "/share/btop/themes\"")))))
-            (add-after 'install 'add-nvidia-runpath
-              (lambda* (#:key outputs #:allow-other-keys)
-                (let ((binary (string-append (assoc-ref outputs "out")
-                                             "/bin/btop")))
-                  (invoke "patchelf" "--add-rpath"
-                          (string-append #$nvda-580 "/lib") binary))))
-            (add-after 'install 'patch-desktop-entry
-              (lambda* (#:key outputs #:allow-other-keys)
-                (let ((desktop (string-append (assoc-ref outputs "out")
-                                "/share/applications/btop.desktop")))
-                  (when (file-exists? desktop)
-                    (substitute* desktop
-                      (("Exec=btop")
-                       "Exec=/run/privileged/bin/btop"))))))))))))
+(define (make-btop-patch enable-nvidia?)
+  (let ((base (package
+                (inherit btop)
+                (name "btop-patch")
+                (arguments
+                 (substitute-keyword-arguments (package-arguments btop)
+                   ((#:phases phases
+                     #~%standard-phases)
+                    #~(modify-phases #$phases
+                        (add-after 'unpack 'patch-theme-dir
+                          (lambda* (#:key outputs #:allow-other-keys)
+                            (substitute* "src/btop.cpp"
+                              (("\"\\.\\./share/btop/themes\"")
+                               (string-append "\""
+                                              (assoc-ref outputs "out")
+                                              "/share/btop/themes\"")))))
+                        (add-after 'install 'patch-desktop-entry
+                          (lambda* (#:key outputs #:allow-other-keys)
+                            (let ((desktop (string-append (assoc-ref outputs
+                                                                     "out")
+                                            "/share/applications/btop.desktop")))
+                              (when (file-exists? desktop)
+                                (substitute* desktop
+                                  (("Exec=btop")
+                                   "Exec=/run/privileged/bin/btop")))))))))))))
+    (if enable-nvidia?
+        (package
+          (inherit base)
+          (native-inputs (modify-inputs (package-native-inputs base)
+                           (append patchelf)))
+          (arguments
+           (substitute-keyword-arguments (package-arguments base)
+             ((#:phases phases
+               #~%standard-phases)
+              #~(modify-phases #$phases
+                  (add-after 'install 'add-nvidia-runpath
+                    (lambda* (#:key outputs #:allow-other-keys)
+                      (let ((binary (string-append (assoc-ref outputs "out")
+                                                   "/bin/btop")))
+                        (invoke "patchelf" "--add-rpath"
+                                (string-append #$nvda-580 "/lib") binary)))))))))
+        base)))
 
-(define obs-nvidia-patch
-  (package/inherit obs-nvidia
-    (name "obs-nvidia-patch")
-    (arguments (substitute-keyword-arguments (package-arguments obs-nvidia)
-                 ((#:phases phases
-                   #~%standard-phases)
-                  #~(modify-phases #$phases
-                      (add-after 'unpack 'trust-builtin-v4l2loopback
-                        (lambda _
-                          (substitute* "plugins/linux-v4l2/v4l2-output.c"
-                            (("return loaded;")
-                             "return true;"))))))))))
+(define (make-obs-patch enable-nvidia?)
+  (let ((base (if enable-nvidia? obs-nvidia
+                  (@ (gnu packages video) obs))))
+    (package/inherit base
+      (name (if enable-nvidia? "obs-nvidia-patch" "obs-patch"))
+      (arguments (substitute-keyword-arguments (package-arguments base)
+                   ((#:phases phases
+                     #~%standard-phases)
+                    #~(modify-phases #$phases
+                        (add-after 'unpack 'trust-builtin-v4l2loopback
+                          (lambda _
+                            (substitute* "plugins/linux-v4l2/v4l2-output.c"
+                              (("return loaded;")
+                               "return true;")))))))))))
 
-(define packages-list
-  '( ;System utilities
-     "acpi"
-    "coreutils"
-    "bash"
-    "curl"
-    "dbus"
-    "glib:bin"
-    "jq"
-    "fzf"
-    "ripgrep"
-    "libcap"
-    "ncurses"
-    "btrfs-progs"
-    "unzip"
-    "unrar"
-    "7zip"
-    "cryptsetup"
-    "libsecret"
-    "keepassxc"
+(define (packages-list enable-nvidia?)
+  (append '( ;System utilities
+             "acpi"
+            "coreutils"
+            "bash"
+            "curl"
+            "dbus"
+            "glib:bin"
+            "jq"
+            "fzf"
+            "ripgrep"
+            "libcap"
+            "ncurses"
+            "btrfs-progs"
+            "unzip"
+            "unrar"
+            "7zip"
+            "cryptsetup"
+            "libsecret"
+            "keepassxc"
 
-    ;; Networking
-    "openssh"
-    "openvpn"
-    "network-manager-openvpn"
+            ;; Networking
+            "openssh"
+            "openvpn"
+            "network-manager-openvpn"
 
-    ;; Version control
-    "git"
-    "git-lfs"
+            ;; Version control
+            "git"
+            "git-lfs"
 
-    ;; Graphics and video
-    "libva-utils"
-    "vulkan-tools"
-    "intel-media-driver"
+            ;; Graphics and video
+            "libva-utils"
+            "vulkan-tools"
+            "intel-media-driver"
 
-    ;; Audio
-    "alsa-lib"
-    "alsa-utils"
-    "alsa-plugins"
-    "libcanberra"
-    "pipewire"
-    "wireplumber"
-    "playerctl"
+            ;; Audio
+            "alsa-lib"
+            "alsa-utils"
+            "alsa-plugins"
+            "libcanberra"
+            "pipewire"
+            "wireplumber"
+            "playerctl"
 
-    ;; Containers & Virtualization
-    "podman"
-    "podman-compose"
-    "qemu"
-    "libvirt"
-    "virt-manager"
-    "virt-viewer"
-    "dnsmasq"
+            ;; Containers & Virtualization
+            "podman"
+            "podman-compose"
+            "qemu"
+            "libvirt"
+            "virt-manager"
+            "virt-viewer"
+            "dnsmasq"
 
-    ;; Python and machine learning
-    "python"
-    "python-numpy"
-    "python-pillow"
-    "onnxruntime:python"
+            ;; Python and machine learning
+            "python"
+            "python-numpy"
+            "python-pillow"
+            "onnxruntime:python"
 
-    ;; Desktop integration
-    "ddcutil"
-    "gtk+"
-    "gtk"
-    "gsettings-desktop-schemas"
-    "xdg-utils"
-    "xdg-user-dirs"
-    "xdg-desktop-portal"
-    "xdg-desktop-portal-gtk"
-    "xdg-desktop-portal-wlr"
-    "gvfs"
-    "dex"
-    "flatpak"
-    "gnome-software"
+            ;; Desktop integration
+            "ddcutil"
+            "gtk+"
+            "gtk"
+            "gsettings-desktop-schemas"
+            "xdg-utils"
+            "xdg-user-dirs"
+            "xdg-desktop-portal"
+            "xdg-desktop-portal-gtk"
+            "xdg-desktop-portal-wlr"
+            "gvfs"
+            "dex"
+            "flatpak"
+            "gnome-software"
 
-    ;; Wayland
-    "wlr-randr"
-    "wdisplays"
-    "kanshi"
-    "wl-mirror"
-    "wl-clipboard"
+            ;; Wayland
+            "wlr-randr"
+            "wdisplays"
+            "kanshi"
+            "wl-mirror"
+            "wl-clipboard"
 
-    ;; Desktop environment
-    "noctalia-git"
-    "xfconf"
-    "foot"
+            ;; Desktop environment
+            "noctalia-git"
+            "xfconf"
+            "foot"
 
-    ;; Themes and icons
-    "yaru-theme"
-    "adw-gtk3-theme"
-    "adwaita-icon-theme"
-    "papirus-icon-theme"
+            ;; Themes and icons
+            "yaru-theme"
+            "adw-gtk3-theme"
+            "adwaita-icon-theme"
+            "papirus-icon-theme"
 
-    ;; Fonts
-    "fontconfig"
-    "font-adwaita"
-    "font-dejavu"
-    "font-gnu-unifont"
-    "font-nerd-jetbrains-mono"
-    "font-nerd-symbols"
-    "font-google-noto-sans-cjk"
-    "font-google-noto-serif-cjk"
-    "font-google-noto-emoji"
-    "font-adobe-source-han-sans"
+            ;; Fonts
+            "fontconfig"
+            "font-adwaita"
+            "font-dejavu"
+            "font-gnu-unifont"
+            "font-nerd-jetbrains-mono"
+            "font-nerd-symbols"
+            "font-google-noto-sans-cjk"
+            "font-google-noto-serif-cjk"
+            "font-google-noto-emoji"
+            "font-adobe-source-han-sans"
 
-    ;; Localization
-    "glibc-locales"
+            ;; Localization
+            "glibc-locales"
 
-    ;; File manager
-    "tumbler"
-    "thunar-volman"
+            ;; File manager
+            "tumbler"
+            "thunar-volman"
 
-    ;; Editors
-    "neovim"
+            ;; Editors
+            "neovim"
 
-    ;; Desktop apps
-    "loupe"
-    "vlc"
-    "snapshot"
-    "decibels"
-    "gnome-calculator"
-    "ungoogled-chromium"
-    "obs-wlrobs"
-    "v4l-utils"
-    "fuzzel"
+            ;; Desktop apps
+            "loupe"
+            "vlc"
+            "snapshot"
+            "decibels"
+            "gnome-calculator"
+            "ungoogled-chromium"
+            "obs-wlrobs"
+            "v4l-utils"
+            "fuzzel"
 
-    ;; Gaming
-    "mangohud"
-    "gamemode"
-    "cartridges"
-    "steam-nvidia@580"
-    "heroic-nvidia@580"
-    "protonup"))
+            ;; Gaming
+            "mangohud"
+            "gamemode"
+            "cartridges"
+            "protonup")
+          (if enable-nvidia?
+              '("steam-nvidia@580" "heroic-nvidia@580")
+              '())))
