@@ -8,48 +8,52 @@ nvidia_version=${1:-}
 if [[ $# -gt 0 ]]; then shift; fi
 
 packages=(
+  # Base
   bash
   coreutils
   glibc
+
+  # Development
   gcc-toolchain
   jemalloc
   mono
 
   # Utilities
-  findutils
-  grep
-  sed
-  gawk
+  7zip
   file
-  which
-  util-linux
-  procps
-  xz
-  lz4
-  zstd
-  tar
+  findutils
+  gawk
+  grep
   gzip
+  lz4
+  procps
+  sed
+  tar
   unrar
   unzip
-  7zip
-  yad
-  zenity
-  cage
+  util-linux
+  which
+  xz
+  zstd
 
+  # GUI
+  adwaita-icon-theme
+  cage
   gtk
   gtk+
   hicolor-icon-theme
-  adwaita-icon-theme
+  yad
+  zenity
 
   # Graphics
   mesa-utils
   vulkan-tools
 
   # Audio
-  pipewire
-  pulseaudio
   alsa-lib
   alsa-plugins
+  pipewire
+  pulseaudio
 )
 
 gpu_args=(--expose=/dev/dri)
