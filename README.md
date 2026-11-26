@@ -45,7 +45,7 @@ Everything machine-specific sits at the top of `configuration.scm`:
 - `kernel-cachyos #:series` / `#:release`, `enable-nvidia?`, and
   `nvidia-version`
 
-Derived values such as podman subuid ranges and nocatlai passwordless sync users
+Derived values such as podman subuid ranges and noctalia passwordless sync users
 are computed from `users` inside `modules/services.scm`, so there is only one 
 place to edit your accounts.
 
