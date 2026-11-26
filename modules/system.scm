@@ -17,7 +17,7 @@
   (if enable-nvidia?
       (let ((transformed ((nonguix-transformation-nvidia #:driver nvda-580
                                                          #:open-source-kernel-module?
-                                                         #f
+                                                         #t
                                                          #:kernel-mode-setting?
                                                          #t
                                                          #:dynamic-boost? #t)
