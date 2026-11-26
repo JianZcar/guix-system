@@ -71,5 +71,9 @@ guix pull -C channels.scm
 guix system build configuration.scm
 ```
 
+The first build and installation can take a long time: the CachyOS kernel and
+its NVIDIA module are compiled from source, so a cold cache means a lot of work.
+Be patient. Later builds reuse those results and are much faster.
+
 Review the machine-specific values at the top of `configuration.scm` before
 deploying. Replace `root-partition-uuid` if you turn LUKS off.
