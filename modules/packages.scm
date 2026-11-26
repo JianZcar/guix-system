@@ -9,6 +9,7 @@
   #:use-module (nongnu packages nvidia)
   #:use-module (nongnu packages video)
   #:use-module (modules desktop)
+  #:use-module (modules nvidia)
   #:export (packages patch-packages privileged-programs))
 
 (define thunar-patch
@@ -30,8 +31,11 @@
                       (("exo-open --working-directory %f --launch TerminalEmulator")
                        "xterm"))))))))))))
 
-(define (make-btop-patch enable-nvidia?)
-  (let ((base (package
+(define* (make-btop-patch enable-nvidia?
+                          #:key version)
+  (let ((driver (and enable-nvidia?
+                     (nvidia-package "nvda" version)))
+        (base (package
                 (inherit btop)
                 (name "btop-patch")
                 (arguments
@@ -70,7 +74,7 @@
                       (let ((binary (string-append (assoc-ref outputs "out")
                                                    "/bin/btop")))
                         (invoke "patchelf" "--add-rpath"
-                                (string-append #$nvda-580 "/lib") binary)))))))))
+                                (string-append #$driver "/lib") binary)))))))))
         base)))
 
 (define (make-obs-patch enable-nvidia?)
@@ -88,7 +92,8 @@
                               (("return loaded;")
                                "return true;")))))))))))
 
-(define (packages enable-nvidia?)
+(define* (packages enable-nvidia?
+                   #:key version)
   (append '( ;System utilities
              "acpi"
             "coreutils"
@@ -201,6 +206,7 @@
 
             ;; Editors
             "neovim"
+            "emacs"
 
             ;; Desktop apps
             "loupe"
@@ -219,16 +225,23 @@
             "cartridges"
             "protonup")
           (if enable-nvidia?
-              '("steam-nvidia@580" "heroic-nvidia@580")
-              '())))
+              (list (string-append "steam-nvidia@" version)
+                    (string-append "heroic-nvidia@" version))
+              '("steam" "heroic"))))
 
-(define (patch-packages enable-nvidia?)
+(define* (patch-packages enable-nvidia?
+                         #:key version)
   (list mangowm-patch thunar-patch
-        (make-btop-patch enable-nvidia?)
+        (make-btop-patch enable-nvidia?
+                         #:version version)
         (make-obs-patch enable-nvidia?)
-        (make-desktop-session-tools enable-nvidia?)))
+        (make-desktop-session-tools enable-nvidia?
+                                    #:version version)))
 
-(define (privileged-programs enable-nvidia?)
+(define* (privileged-programs enable-nvidia?
+                              #:key version)
   (cons (privileged-program
-          (program (file-append (make-btop-patch enable-nvidia?) "/bin/btop"))
+          (program (file-append (make-btop-patch enable-nvidia?
+                                                 #:version version)
+                                "/bin/btop"))
           (capabilities "cap_perfmon=ep")) %default-privileged-programs))

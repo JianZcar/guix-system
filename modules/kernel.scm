@@ -10,41 +10,8 @@
   #:use-module (gnu packages linux)
   #:use-module (nongnu packages linux)
   #:use-module (nongnu packages nvidia)
-  #:export (kernel-cachyos nvidia-module-cachyos))
-
-(define kernel-cachyos-series
-  "7.3")
-(define kernel-cachyos-release
-  "5-2")
-
-(define kernel-cachyos-version
-  (string-append kernel-cachyos-series "." kernel-cachyos-release))
-
-(define kernel-cachyos-source
-  (git-checkout (url "https://github.com/CachyOS/linux")
-                (commit (string-append "cachyos-" kernel-cachyos-version))
-                (recursive? #t)))
-
-(define kernel-cachyos-config-source
-  (git-checkout (url "https://github.com/CachyOS/linux-cachyos")
-                (branch "master")
-                (recursive? #t)))
-
-(define kernel-cachyos-patches-source
-  (git-checkout (url "https://github.com/CachyOS/kernel-patches")
-                (branch "master")
-                (recursive? #t)))
-
-(define kernel-cachyos-bore-patch
-  (file-append kernel-cachyos-patches-source "/" kernel-cachyos-series
-               "/sched/0001-bore-cachy.patch"))
-
-(define kernel-cachyos-dkms-clang-patch
-  (file-append kernel-cachyos-patches-source "/" kernel-cachyos-series
-               "/misc/dkms-clang.patch"))
-
-(define kernel-cachyos-config
-  (file-append kernel-cachyos-config-source "/linux-cachyos-bore/config"))
+  #:use-module (modules nvidia)
+  #:export (make-kernel-cachyos make-nvidia-module-cachyos))
 
 (define kernel-cachyos-configs
   '("CONFIG_CACHY=y" "CONFIG_SCHED_BORE=y"
@@ -86,84 +53,102 @@
     "# CONFIG_ANDROID_BINDER_IPC_RUST is not set"
     "# CONFIG_RUST_OVERFLOW_CHECKS is not set"))
 
-(define kernel-cachyos-base
-  (customize-linux #:name "linux-cachyos"
-                   #:linux linux-libre
-                   #:source kernel-cachyos-source
-                   #:defconfig "cachyos_defconfig"
-                   #:extra-version "kernel-cachyos"
-                   #:configs kernel-cachyos-configs))
+(define* (make-kernel-cachyos #:key series release)
+  (let* ((version (string-append series "." release))
+         (source (git-checkout (url "https://github.com/CachyOS/linux")
+                               (commit (string-append "cachyos-" version))
+                               (recursive? #t)))
+         (config-source (git-checkout (url
+                                       "https://github.com/CachyOS/linux-cachyos")
+                                      (branch "master")
+                                      (recursive? #t)))
+         (patches-source (git-checkout (url
+                                        "https://github.com/CachyOS/kernel-patches")
+                                       (branch "master")
+                                       (recursive? #t)))
+         (bore-patch (file-append patches-source "/" series
+                                  "/sched/0001-bore-cachy.patch"))
+         (dkms-clang-patch (file-append patches-source "/" series
+                                        "/misc/dkms-clang.patch"))
+         (config (file-append config-source "/linux-cachyos-bore/config"))
+         (base (customize-linux #:name "linux-cachyos"
+                                #:linux linux-libre
+                                #:source source
+                                #:defconfig "cachyos_defconfig"
+                                #:extra-version "kernel-cachyos"
+                                #:configs kernel-cachyos-configs)))
+    (package
+      (inherit base)
+      (version version)
+      (supported-systems '("x86_64-linux"))
 
-(define kernel-cachyos
-  (package
-    (inherit kernel-cachyos-base)
-    (version kernel-cachyos-version)
-    (supported-systems '("x86_64-linux"))
+      (arguments
+       (substitute-keyword-arguments (package-arguments base)
+         ((#:phases phases)
+          #~(modify-phases #$phases
+              (add-after 'unpack 'apply-cachyos-patches
+                (lambda _
+                  (invoke "patch"
+                          "--batch"
+                          "--forward"
+                          "-p1"
+                          "-i"
+                          #$bore-patch)
+                  (invoke "patch"
+                          "--batch"
+                          "--forward"
+                          "-p1"
+                          "-i"
+                          #$dkms-clang-patch)))
 
-    (arguments
-     (substitute-keyword-arguments (package-arguments kernel-cachyos-base)
-       ((#:phases phases)
-        #~(modify-phases #$phases
-            (add-after 'unpack 'apply-cachyos-patches
-              (lambda _
-                (invoke "patch"
-                        "--batch"
-                        "--forward"
-                        "-p1"
-                        "-i"
-                        #$kernel-cachyos-bore-patch)
-                (invoke "patch"
-                        "--batch"
-                        "--forward"
-                        "-p1"
-                        "-i"
-                        #$kernel-cachyos-dkms-clang-patch)))
+              (add-before 'configure 'prepare-cachyos-defconfig
+                (lambda _
+                  (setenv "LLVM" "1")
+                  (setenv "LLVM_IAS" "1")
+                  (setenv "CC" "clang")
+                  (setenv "LD" "ld.lld")
+                  (copy-file #$config ".config")
+                  (invoke "make" "olddefconfig")
+                  (invoke "make" "savedefconfig")
+                  (rename-file "defconfig"
+                               "arch/x86/configs/cachyos_defconfig")))
 
-            (add-before 'configure 'prepare-cachyos-defconfig
-              (lambda _
-                (setenv "LLVM" "1")
-                (setenv "LLVM_IAS" "1")
-                (setenv "CC" "clang")
-                (setenv "LD" "ld.lld")
-                (copy-file #$kernel-cachyos-config ".config")
-                (invoke "make" "olddefconfig")
-                (invoke "make" "savedefconfig")
-                (rename-file "defconfig" "arch/x86/configs/cachyos_defconfig")))
+              (add-before 'build 'set-libgcc-path
+                (lambda* (#:key inputs #:allow-other-keys)
+                  (setenv "LD_LIBRARY_PATH"
+                          (string-append (assoc-ref inputs "gcc") "/lib"))))))
 
-            (add-before 'build 'set-libgcc-path
-              (lambda* (#:key inputs #:allow-other-keys)
-                (setenv "LD_LIBRARY_PATH"
-                         (string-append (assoc-ref inputs "gcc") "/lib"))))))
+         ((#:make-flags flags
+           #~(list))
+          #~(append #$flags
+                    '("LLVM=1" "LLVM_IAS=1" "CC=clang" "LD=ld.lld")))))
 
-     ((#:make-flags flags
-       #~(list))
-      #~(append #$flags
-                 '("LLVM=1" "LLVM_IAS=1" "CC=clang" "LD=ld.lld")))))
+      (native-inputs (modify-inputs (package-native-inputs base)
+                       (prepend cpio
+                                zstd
+                                clang
+                                llvm
+                                lld-wrapper
+                                (list gcc "lib"))))
 
-  (native-inputs (modify-inputs (package-native-inputs kernel-cachyos-base)
-                   (prepend cpio
-                            zstd
-                            clang
-                            llvm
-                            lld-wrapper
-                            (list gcc "lib"))))
+      (home-page "https://github.com/CachyOS/linux")
+      (synopsis "CachyOS Linux kernel")
+      (description
+       "CachyOS Linux kernel built with the BORE scheduler, Clang/LLVM ThinLTO, native x86-64 CPU tuning."))))
 
-  (home-page "https://github.com/CachyOS/linux")
-  (synopsis "CachyOS Linux kernel")
-   (description
-    "CachyOS Linux kernel built with the BORE scheduler, Clang/LLVM ThinLTO, native x86-64 CPU tuning.")))
-
-(define nvidia-module-cachyos
-  (package
-    (inherit nvidia-module-580)
-    (name "nvidia-module-cachyos")
-    (arguments
-     (substitute-keyword-arguments (package-arguments nvidia-module-580)
-       ((#:linux linux #f)
-        kernel-cachyos)
-       ((#:make-flags flags
-         #~(list))
-        #~(list "CC=clang" "LLVM=1" "LLVM_IAS=1" "LD=ld.lld"))))
-    (native-inputs (modify-inputs (package-native-inputs nvidia-module-580)
-                     (prepend clang llvm lld-wrapper
-                              (list gcc "lib"))))))
+(define* (make-nvidia-module-cachyos kernel
+                                     #:key version)
+  (let ((nvidia-module (nvidia-package "nvidia-module" version)))
+    (package
+      (inherit nvidia-module)
+      (name "nvidia-module-cachyos")
+      (arguments
+       (substitute-keyword-arguments (package-arguments nvidia-module)
+         ((#:linux linux #f)
+          kernel)
+         ((#:make-flags flags
+           #~(list))
+          #~(list "CC=clang" "LLVM=1" "LLVM_IAS=1" "LD=ld.lld"))))
+      (native-inputs (modify-inputs (package-native-inputs nvidia-module)
+                       (prepend clang llvm lld-wrapper
+                                (list gcc "lib")))))))

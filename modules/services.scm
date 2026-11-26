@@ -32,11 +32,15 @@
   #:use-module (midnight services noctalia-greeter)
   #:use-module (modules desktop)
   #:use-module (modules files)
-  #:use-module (modules system)
-  #:use-module (modules users)
+  #:use-module (modules signing-keys)
   #:export (make-services))
 
-(define (make-services os)
+(define* (make-services #:key host-name users)
+  (define passwordless-sync-users
+    (map user-account-name users))
+  (define podman-subids
+    (map (lambda (user)
+           (subid-range (name (user-account-name user)))) users))
   (append (list ;use substitutes from nonguix.
                 (simple-service 'substitute-servers guix-service-type
                                 (guix-extension (substitute-urls (list
@@ -83,8 +87,7 @@
                 (service udisks-service-type)
 
                 (service bluetooth-service-type
-                         (bluetooth-configuration (name (operating-system-host-name
-                                                         os))))
+                         (bluetooth-configuration (name host-name)))
 
                 ;; networking
                 (service wpa-supplicant-service-type)

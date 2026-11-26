@@ -258,20 +258,24 @@
 (define run-game-script
   (local-file "../scripts/run-game"))
 
-(define (make-run-game enable-nvidia?)
+(define* (make-run-game enable-nvidia?
+                        #:key version)
   (program-file "run-game"
                 #~(let ((status (apply system*
                                        #$(file-append bash "/bin/bash")
                                        #$run-game-script
-                                       #$(if enable-nvidia? "--nvidia"
-                                             "--no-nvidia")
+                                       #$@(if enable-nvidia?
+                                              (list "--nvidia" version)
+                                              (list "--no-nvidia"))
                                        (cdr (command-line)))))
                     (primitive-exit status))))
 
-(define (make-desktop-session-tools enable-nvidia?)
+(define* (make-desktop-session-tools enable-nvidia?
+                                     #:key version)
   (let* ((nv (and enable-nvidia?
                   (make-nv)))
-         (run-game (make-run-game enable-nvidia?)))
+         (run-game (make-run-game enable-nvidia?
+                                  #:version version)))
     (package
       (name "desktop-session-tools")
       (version "1.0")

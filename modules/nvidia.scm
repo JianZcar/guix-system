@@ -1,4 +1,4 @@
-(define-module (modules system)
+(define-module (modules nvidia)
   #:use-module (guix gexp)
   #:use-module (guix packages)
   #:use-module (gnu services)
@@ -6,16 +6,18 @@
   #:use-module (nonguix transformations)
   #:use-module (nongnu packages nvidia)
   #:use-module (nongnu services nvidia)
-  #:use-module (modules kernel)
-  #:export (nonguix-signing-key nvidia-transform))
+  #:export (nvidia-package nvidia-transform))
 
-(define nonguix-signing-key
-  (plain-file "nonguix.pub"
-   "(public-key (ecc (curve Ed25519) (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))"))
+(define (nvidia-package prefix version)
+  (module-ref (resolve-module '(nongnu packages nvidia))
+              (string->symbol (string-append prefix "-" version))))
 
-(define (nvidia-transform enable-nvidia? os)
+(define* (nvidia-transform enable-nvidia? os
+                           #:key nvidia-module version)
   (if enable-nvidia?
-      (let ((transformed ((nonguix-transformation-nvidia #:driver nvda-580
+      (let ((transformed ((nonguix-transformation-nvidia #:driver (nvidia-package
+                                                                   "nvda"
+                                                                   version)
                                                          #:open-source-kernel-module?
                                                          #t
                                                          #:kernel-mode-setting?
@@ -28,6 +30,5 @@
            (modify-services (operating-system-user-services transformed)
              (nvidia-service-type config =>
                                   (nvidia-configuration (inherit config)
-                                                        (module
-                                                         nvidia-module-cachyos)))))))
+                                                        (module nvidia-module)))))))
       os))
