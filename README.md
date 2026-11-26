@@ -21,9 +21,12 @@ opinionated choices, this is a good place to start.
 - **Kernel:** CachyOS built by Guix from source, with the BORE scheduler,
   Clang/LLVM ThinLTO, and native x86-64 tuning. Series and release are
   parameters, so updating the kernel is a one-line change.
-- **NVIDIA:** Version-selectable nonguix driver and kernel module. The module is
-  built against the exact CachyOS kernel you configure, so the two cannot
-  drift apart. Flip `enable-nvidia?` to get plain Steam and Heroic instead.
+- **NVIDIA:** Version-selectable nonguix driver and kernel module, built against
+  the exact CachyOS kernel you configure so the two cannot drift apart. Flip
+  `enable-nvidia?` to `#f` to skip the nonguix transformation and NVIDIA service
+  entirely, use plain Steam/Heroic, drop btop's driver runpath, and pass
+  `--no-nvidia` to `run-game`. Nothing NVIDIA is built, and the version is not
+  resolved at all while the toggle is off.
 - **Storage:** Btrfs root with `compress=zstd:3`, `space_cache=v2`, and
   `no-atime`, EFI boot, and a LUKS toggle with self-describing UUID variables.
 - **Services:** Thermal management, zram, earlyoom, fstrim, polkit, elogind,
@@ -46,7 +49,7 @@ Everything machine-specific sits at the top of `configuration.scm`:
   `nvidia-version`
 
 Derived values such as podman subuid ranges and noctalia passwordless sync users
-are computed from `users` inside `modules/services.scm`, so there is only one 
+are computed from `users` inside `modules/services.scm`, so there is only one
 place to edit your accounts.
 
 ## Layout

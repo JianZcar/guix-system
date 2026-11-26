@@ -126,7 +126,8 @@
                                            (device (uuid efi-partition-uuid
                                                          'fat32))
                                            (type "vfat")) %base-file-systems)))
-                  #:nvidia-module (make-nvidia-module-cachyos kernel-cachyos
-                                                              #:version
-                                                              nvidia-version)
+                   #:nvidia-module (and enable-nvidia?
+                                         (make-nvidia-module-cachyos
+                                          kernel-cachyos
+                                          #:version nvidia-version))
                   #:version nvidia-version)
